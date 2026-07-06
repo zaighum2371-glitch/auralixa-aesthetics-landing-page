@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { ChevronDown } from 'lucide-react'
 
 interface HeaderProps {
   onBookingClick: () => void
@@ -11,11 +10,14 @@ interface HeaderProps {
 export function Header({ onBookingClick }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
 
-  if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', () => {
+  useEffect(() => {
+    const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
-    }, { passive: true })
-  }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
     <>
