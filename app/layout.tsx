@@ -1,10 +1,14 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Playfair_Display, Inter } from 'next/font/google'
 import './globals.css'
 
+const playfairDisplay = Playfair_Display({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const inter = Inter({ subsets: ['latin'] })
+
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Auralixa Aesthetics | Premium Aesthetic Treatments',
+  description: 'Discover luxury aesthetic treatments at Auralixa. Expert procedures in injectables, skincare, body contouring, and wellness.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -39,8 +43,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" className="bg-background scroll-smooth">
+      <body className={`${inter.className} antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
