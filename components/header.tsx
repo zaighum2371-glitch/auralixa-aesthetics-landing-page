@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Instagram } from 'lucide-react'
 
 interface HeaderProps {
   onBookingClick: () => void
@@ -50,13 +51,24 @@ export function Header({ onBookingClick }: HeaderProps) {
             </a>
           </nav>
 
-          {/* CTA Button */}
-          <Button 
-            onClick={onBookingClick}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            Book Consultation
-          </Button>
+          {/* CTA Button and Social */}
+          <div className="flex items-center gap-4">
+            <Button 
+              onClick={onBookingClick}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Book Consultation
+            </Button>
+            <a 
+              href="https://www.instagram.com/auralixa_aesthetics/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-foreground hover:text-accent transition-colors"
+              aria-label="Follow us on Instagram"
+            >
+              <Instagram className="w-6 h-6" />
+            </a>
+          </div>
         </div>
       </header>
     </>
