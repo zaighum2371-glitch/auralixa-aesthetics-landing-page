@@ -59,8 +59,8 @@ export function Footer({ onBookingClick }: FooterProps) {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <a href="mailto:info@auralixa.com" className="opacity-80 hover:opacity-100 transition-opacity">
-                  info@auralixa.com
+                <a href="mailto:auralixax@gmail.com" className="opacity-80 hover:opacity-100 transition-opacity">
+                  auralixax@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-2">

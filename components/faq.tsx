@@ -90,7 +90,7 @@ export function FAQ() {
             Can&apos;t find the answer you&apos;re looking for?
           </p>
           <p className="text-sm text-foreground">
-            Contact our team at <a href="tel:07448297154" className="text-accent font-medium hover:underline">07448 297154</a> or <a href="mailto:info@auralixa.com" className="text-accent font-medium hover:underline">info@auralixa.com</a>
+            Contact our team at <a href="tel:07448297154" className="text-accent font-medium hover:underline">07448 297154</a> or <a href="mailto:auralixax@gmail.com" className="text-accent font-medium hover:underline">auralixax@gmail.com</a>
           </p>
         </div>
       </div>
