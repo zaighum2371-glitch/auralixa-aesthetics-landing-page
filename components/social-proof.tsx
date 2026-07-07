@@ -1,6 +1,7 @@
 'use client'
 
 import { Star } from 'lucide-react'
+import Image from 'next/image'
 
 interface Testimonial {
   id: string
@@ -90,21 +91,41 @@ export function SocialProof() {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="space-y-4">
+            {[
+              { before: '/before-after/before-1.png', after: '/before-after/after-1.png', label: 'Skin Rejuvenation' },
+              { before: '/before-after/before-2.png', after: '/before-after/after-2.png', label: 'Facial Contouring' },
+              { before: '/before-after/before-3.png', after: '/before-after/after-3.png', label: 'Lip Enhancement' },
+              { before: '/before-after/before-4.png', after: '/before-after/after-4.png', label: 'Under-Eye Treatment' },
+            ].map((item, idx) => (
+              <div key={idx} className="space-y-4">
                 {/* Before */}
-                <div className="bg-gradient-to-br from-muted to-secondary rounded-lg h-64 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground/60">Before</p>
+                <div className="relative rounded-lg overflow-hidden h-64">
+                  <Image
+                    src={item.before}
+                    alt={`Before - ${item.label}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded">
+                    Before
                   </div>
                 </div>
 
                 {/* After */}
-                <div className="bg-gradient-to-br from-accent/30 to-secondary rounded-lg h-64 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground">After</p>
+                <div className="relative rounded-lg overflow-hidden h-64">
+                  <Image
+                    src={item.after}
+                    alt={`After - ${item.label}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-accent text-black text-xs font-medium px-3 py-1 rounded">
+                    After
                   </div>
                 </div>
+
+                {/* Label */}
+                <p className="text-center text-sm font-medium text-foreground">{item.label}</p>
               </div>
             ))}
           </div>
