@@ -53,8 +53,8 @@ export function Footer({ onBookingClick }: FooterProps) {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <a href="tel:+1234567890" className="opacity-80 hover:opacity-100 transition-opacity">
-                  (123) 456-7890
+                <a href="tel:07448297154" className="opacity-80 hover:opacity-100 transition-opacity">
+                  07448 297154
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -66,24 +66,25 @@ export function Footer({ onBookingClick }: FooterProps) {
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 <span className="opacity-80">
-                  123 Wellness Ave, Beauty City, BC 12345
+                  Castlemere Community Centre, 60 Tweedale St, Rochdale OL11 1HH
                 </span>
               </li>
             </ul>
           </div>
 
-          {/* CTA */}
+          {/* Hours */}
           <div>
-            <h4 className="font-medium mb-4">Ready to Transform?</h4>
-            <Button
-              onClick={onBookingClick}
-              className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              Book Now
-            </Button>
-            <p className="text-xs opacity-60 mt-4">
-              Schedule your free consultation today.
-            </p>
+            <h4 className="font-medium mb-4">Hours</h4>
+            <ul className="space-y-1 text-sm opacity-80">
+              <li className="flex justify-between gap-4">
+                <span>Monday–Friday:</span>
+                <span>10 am–6 pm</span>
+              </li>
+              <li className="flex justify-between gap-4">
+                <span>Saturday–Sunday:</span>
+                <span>10 am–5 pm</span>
+              </li>
+            </ul>
           </div>
         </div>
 
