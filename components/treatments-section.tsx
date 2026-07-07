@@ -67,17 +67,12 @@ export function TreatmentsSection({ onTreatmentSelect }: TreatmentsSectionProps)
                 <div className="mb-6 pb-6 border-b border-border flex-grow">
                   <h4 className="text-sm font-semibold text-foreground mb-3">Benefits:</h4>
                   <ul className="space-y-2">
-                    {treatment.benefits.slice(0, 4).map((benefit, idx) => (
+                    {treatment.benefits.map((benefit, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
                         <ChevronRight className="w-3 h-3 text-accent flex-shrink-0 mt-0.5" />
                         <span>{benefit}</span>
                       </li>
                     ))}
-                    {treatment.benefits.length > 4 && (
-                      <li className="text-xs text-accent font-medium mt-2">
-                        +{treatment.benefits.length - 4} more benefits
-                      </li>
-                    )}
                   </ul>
                 </div>
               )}
