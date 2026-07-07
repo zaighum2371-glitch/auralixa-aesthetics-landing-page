@@ -119,6 +119,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
                     name="date"
                     value={formData.date}
                     onChange={handleInputChange}
+                    readOnly
                     className="w-full px-3 py-2 bg-background text-foreground cursor-pointer"
                   />
                 </div>
