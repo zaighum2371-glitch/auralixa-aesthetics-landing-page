@@ -66,7 +66,7 @@ export function Footer({ onBookingClick }: FooterProps) {
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 <span className="opacity-80">
-                  Castlemere Community Centre, 60 Tweedale St, Rochdale OL11 1HH
+                  Castlemere Community Centre, 60 Tweedale St, OL11 1HH, Rochdale, Greater Manchester, United Kingdom
                 </span>
               </li>
             </ul>
