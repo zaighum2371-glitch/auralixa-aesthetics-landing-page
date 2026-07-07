@@ -1,6 +1,7 @@
 'use client'
 
 import { Star } from 'lucide-react'
+import Image from 'next/image'
 
 interface Testimonial {
   id: string
@@ -13,23 +14,44 @@ interface Testimonial {
 const TESTIMONIALS: Testimonial[] = [
   {
     id: '1',
-    name: 'Sarah Mitchell',
-    role: 'Marketing Executive',
-    content: 'Auralixa completely transformed my appearance with their Botox treatment. The results are natural and stunning. I couldn\'t be happier!',
+    name: 'Zaheeda',
+    role: 'Microneedling Client',
+    content: 'I have had 4 sessions of microneedling and I am impressed with the end results. My skin is now left looking fresh, plumped and smooth. Sadaf is very friendly and easy going. Would highly recommend her service.',
     rating: 5,
   },
   {
     id: '2',
-    name: 'Jessica Chen',
-    role: 'Entrepreneur',
-    content: 'The HydraFacial was an absolute game-changer for my skin. I saw immediate results and the staff was incredibly professional.',
+    name: 'Kathryn Miller',
+    role: 'Facial Treatment',
+    content: 'I had such a fantastic experience all thanks to Sadaf. I had really dry and tired skin but after my facial my face felt so soft and hydrated. I highly recommend this lovely lady she made me feel so welcome and relaxed.',
     rating: 5,
   },
   {
     id: '3',
-    name: 'Amanda Rodriguez',
-    role: 'Fashion Designer',
-    content: 'I\'ve tried many aesthetic clinics, but Auralixa stands out. The practitioners truly care about achieving natural-looking results.',
+    name: 'Tahira Parveen',
+    role: 'HydraFacial Client',
+    content: 'I had a HydraFacial and honestly, my skin has never felt this clean and refreshed. The treatment was gentle, relaxing, and completely pain-free. It deeply cleansed my pores and left my face feeling super smooth and hydrated.',
+    rating: 5,
+  },
+  {
+    id: '4',
+    name: 'Samea Fatima',
+    role: 'Aesthetic Treatment',
+    content: 'I had an excellent experience with Sadaf. She was professional, knowledgeable and made me feel completely comfortable throughout my treatments. The results look natural and exactly what I was hoping for.',
+    rating: 5,
+  },
+  {
+    id: '5',
+    name: 'Subeeha Rafiq',
+    role: 'Microdermabrasion Client',
+    content: 'Had microdermabrasion done. My skin felt soft and glowy after my treatment. Sadaf did a great job, she talked through the products she used and made sure I was ok as she was going along. Great experience.',
+    rating: 5,
+  },
+  {
+    id: '6',
+    name: 'Saira Usman',
+    role: 'HydraFacial Client',
+    content: 'Highly recommend very friendly lady who knew exactly what she was doing. The hydra facial was superb, will definitely be a regular. A*',
     rating: 5,
   },
 ]
@@ -49,7 +71,7 @@ export function SocialProof() {
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {TESTIMONIALS.map((testimonial) => (
             <div
               key={testimonial.id}
@@ -90,21 +112,41 @@ export function SocialProof() {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="space-y-4">
+            {[
+              { before: '/before-after/before-1.png', after: '/before-after/after-1.png', label: 'Skin Rejuvenation' },
+              { before: '/before-after/before-2.png', after: '/before-after/after-2.png', label: 'Facial Contouring' },
+              { before: '/before-after/before-3.png', after: '/before-after/after-3.png', label: 'Lip Enhancement' },
+              { before: '/before-after/before-4.png', after: '/before-after/after-4.png', label: 'Under-Eye Treatment' },
+            ].map((item, idx) => (
+              <div key={idx} className="space-y-4">
                 {/* Before */}
-                <div className="bg-gradient-to-br from-muted to-secondary rounded-lg h-64 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground/60">Before</p>
+                <div className="relative rounded-lg overflow-hidden h-64">
+                  <Image
+                    src={item.before}
+                    alt={`Before - ${item.label}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded">
+                    Before
                   </div>
                 </div>
 
                 {/* After */}
-                <div className="bg-gradient-to-br from-accent/30 to-secondary rounded-lg h-64 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground">After</p>
+                <div className="relative rounded-lg overflow-hidden h-64">
+                  <Image
+                    src={item.after}
+                    alt={`After - ${item.label}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-accent text-black text-xs font-medium px-3 py-1 rounded">
+                    After
                   </div>
                 </div>
+
+                {/* Label */}
+                <p className="text-center text-sm font-medium text-foreground">{item.label}</p>
               </div>
             ))}
           </div>

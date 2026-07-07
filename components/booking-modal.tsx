@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import { TREATMENT_CATEGORIES, getAllCategories } from '@/lib/treatments'
+import { TREATMENT_CATEGORIES, getAllCategories, TREATMENTS } from '@/lib/treatments'
 
 interface BookingModalProps {
   isOpen: boolean
@@ -97,14 +97,11 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                 >
                   <option value="">Choose a treatment...</option>
-                  <option value="Botox">Botox</option>
-                  <option value="Dermal Fillers">Dermal Fillers</option>
-                  <option value="Lip Enhancement">Lip Enhancement</option>
-                  <option value="HydraFacial">HydraFacial</option>
-                  <option value="Microneedling">Microneedling</option>
-                  <option value="CoolSculpting">CoolSculpting</option>
-                  <option value="IV Therapy">IV Therapy</option>
-                  <option value="Other">Other</option>
+                  {TREATMENTS.map((treatment) => (
+                    <option key={treatment.id} value={treatment.name}>
+                      {treatment.name}
+                    </option>
+                  ))}
                 </select>
               </label>
 
@@ -185,7 +182,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  placeholder="(555) 123-4567"
+                  placeholder="07xxx xxxxxx"
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                 />
               </label>
