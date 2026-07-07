@@ -182,7 +182,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  placeholder="(555) 123-4567"
+                  placeholder="07xxx xxxxxx"
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                 />
               </label>
