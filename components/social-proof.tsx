@@ -14,23 +14,44 @@ interface Testimonial {
 const TESTIMONIALS: Testimonial[] = [
   {
     id: '1',
-    name: 'Sarah Mitchell',
-    role: 'Marketing Executive',
-    content: 'Auralixa completely transformed my appearance with their Botox treatment. The results are natural and stunning. I couldn\'t be happier!',
+    name: 'Zaheeda',
+    role: 'Microneedling Client',
+    content: 'I have had 4 sessions of microneedling and I am impressed with the end results. My skin is now left looking fresh, plumped and smooth. Sadaf is very friendly and easy going. Would highly recommend her service.',
     rating: 5,
   },
   {
     id: '2',
-    name: 'Jessica Chen',
-    role: 'Entrepreneur',
-    content: 'The HydraFacial was an absolute game-changer for my skin. I saw immediate results and the staff was incredibly professional.',
+    name: 'Kathryn Miller',
+    role: 'Facial Treatment',
+    content: 'I had such a fantastic experience all thanks to Sadaf. I had really dry and tired skin but after my facial my face felt so soft and hydrated. I highly recommend this lovely lady she made me feel so welcome and relaxed.',
     rating: 5,
   },
   {
     id: '3',
-    name: 'Amanda Rodriguez',
-    role: 'Fashion Designer',
-    content: 'I\'ve tried many aesthetic clinics, but Auralixa stands out. The practitioners truly care about achieving natural-looking results.',
+    name: 'Tahira Parveen',
+    role: 'HydraFacial Client',
+    content: 'I had a HydraFacial and honestly, my skin has never felt this clean and refreshed. The treatment was gentle, relaxing, and completely pain-free. It deeply cleansed my pores and left my face feeling super smooth and hydrated.',
+    rating: 5,
+  },
+  {
+    id: '4',
+    name: 'Samea Fatima',
+    role: 'Aesthetic Treatment',
+    content: 'I had an excellent experience with Sadaf. She was professional, knowledgeable and made me feel completely comfortable throughout my treatments. The results look natural and exactly what I was hoping for.',
+    rating: 5,
+  },
+  {
+    id: '5',
+    name: 'Subeeha Rafiq',
+    role: 'Microdermabrasion Client',
+    content: 'Had microdermabrasion done. My skin felt soft and glowy after my treatment. Sadaf did a great job, she talked through the products she used and made sure I was ok as she was going along. Great experience.',
+    rating: 5,
+  },
+  {
+    id: '6',
+    name: 'Saira Usman',
+    role: 'HydraFacial Client',
+    content: 'Highly recommend very friendly lady who knew exactly what she was doing. The hydra facial was superb, will definitely be a regular. A*',
     rating: 5,
   },
 ]
@@ -50,7 +71,7 @@ export function SocialProof() {
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {TESTIMONIALS.map((testimonial) => (
             <div
               key={testimonial.id}
