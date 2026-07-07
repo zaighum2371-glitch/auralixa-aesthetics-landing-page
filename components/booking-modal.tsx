@@ -107,22 +107,14 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
 
               <label className="block">
                 <span className="text-sm font-medium text-foreground mb-2 block">Preferred Date</span>
-                <div 
-                  className="w-full border border-border rounded-lg bg-background cursor-pointer hover:border-foreground/50 transition-colors"
-                  onClick={(e) => {
-                    const input = e.currentTarget.querySelector('input')
-                    input?.click()
-                  }}
-                >
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    readOnly
-                    className="w-full px-3 py-2 bg-background text-foreground cursor-pointer"
-                  />
-                </div>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => e.preventDefault()}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground cursor-pointer"
+                />
               </label>
 
               <label className="block">
