@@ -74,21 +74,21 @@ export function SocialProof() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <div className="text-center">
             <div className="text-4xl sm:text-5xl font-serif font-bold text-accent mb-2">
-              100+
+              500+
             </div>
             <p className="text-lg text-foreground font-medium">Happy Clients</p>
           </div>
           <div className="text-center">
             <div className="text-4xl sm:text-5xl font-serif font-bold text-accent mb-2">
-              100%
+              15+
             </div>
-            <p className="text-lg text-foreground font-medium">Satisfaction Rate</p>
+            <p className="text-lg text-foreground font-medium">Years Experience</p>
           </div>
           <div className="text-center">
             <div className="text-4xl sm:text-5xl font-serif font-bold text-accent mb-2">
-              2+
+              98%
             </div>
-            <p className="text-lg text-foreground font-medium">Years Experience</p>
+            <p className="text-lg text-foreground font-medium">Satisfaction Rate</p>
           </div>
         </div>
 
