@@ -70,6 +70,28 @@ export function SocialProof() {
           </p>
         </div>
 
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="text-center">
+            <div className="text-4xl sm:text-5xl font-serif font-bold text-accent mb-2">
+              100+
+            </div>
+            <p className="text-lg text-foreground font-medium">Happy Clients</p>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl sm:text-5xl font-serif font-bold text-accent mb-2">
+              100%
+            </div>
+            <p className="text-lg text-foreground font-medium">Satisfaction Rate</p>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl sm:text-5xl font-serif font-bold text-accent mb-2">
+              2+
+            </div>
+            <p className="text-lg text-foreground font-medium">Years Experience</p>
+          </div>
+        </div>
+
         {/* Testimonials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {TESTIMONIALS.map((testimonial) => (
