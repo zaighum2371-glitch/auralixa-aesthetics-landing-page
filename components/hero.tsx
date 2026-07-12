@@ -69,21 +69,7 @@ export function Hero({ onBookingClick, onExploreClick }: HeroProps) {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-20 pt-12 border-t border-border">
-          <div className="text-center">
-            <p className="text-3xl font-serif font-bold text-foreground">500+</p>
-            <p className="text-sm text-muted-foreground mt-1">Happy Clients</p>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl font-serif font-bold text-foreground">15+</p>
-            <p className="text-sm text-muted-foreground mt-1">Years Experience</p>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl font-serif font-bold text-foreground">98%</p>
-            <p className="text-sm text-muted-foreground mt-1">Satisfaction Rate</p>
-          </div>
-        </div>
+
       </div>
     </section>
   )

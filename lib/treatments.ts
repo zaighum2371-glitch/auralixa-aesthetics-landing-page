@@ -155,5 +155,5 @@ export function getTreatmentsByCategory(category: TreatmentCategory): Treatment[
 }
 
 export function getAllCategories(): TreatmentCategory[] {
-  return ['injectables', 'skincare', 'body', 'wellness']
+  return ['facial', 'injectables', 'body', 'wellness']
 }
