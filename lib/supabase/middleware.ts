@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
 
     if (profile?.role !== 'admin' || profile?.status !== 'active') {
       const url = request.nextUrl.clone()
-      url.pathname = '/unauthorized'
+      url.pathname = '/not-authorized'
       return NextResponse.redirect(url)
     }
   }

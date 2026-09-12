@@ -51,13 +51,17 @@ function LoginForm() {
           return
         }
 
-        // Redirect based on role or original destination
-        if (redirectTo) {
-          router.push(redirectTo)
-        } else if (profile?.role === 'admin') {
-          router.push('/admin')
+        // Strict role-based destination handling
+        if (profile?.role === 'admin') {
+          // Admin can go to requested admin destination or default /admin
+          router.push(redirectTo || '/admin')
         } else {
-          router.push('/dashboard')
+          // Standard members and clients strictly go to /dashboard
+          if (redirectTo && !redirectTo.startsWith('/admin')) {
+            router.push(redirectTo)
+          } else {
+            router.push('/dashboard')
+          }
         }
         router.refresh()
       }
