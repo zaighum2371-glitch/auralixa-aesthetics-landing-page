@@ -6,8 +6,11 @@ node_modules/
 .env.local
 
 # Build outputs
+.next/
 dist/
 build/
+*.tsbuildinfo
+next-env.d.ts
 
 # System files
 .DS_Store

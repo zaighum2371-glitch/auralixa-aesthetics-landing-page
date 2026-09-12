@@ -5,7 +5,7 @@ A comprehensive technical blueprint and phased implementation plan to transform 
 ---
 
 ## User Review Required
-
+ 
 > [!IMPORTANT]
 > **Key Architecture Decisions for Approval:**
 > 1. **Payments Handling:** All payments will be registered as **in-person / on-premises** (`pending_in_person`, `paid_in_person`, `waived`, `refunded_in_person`). The schema is built to be forward-compatible with Stripe without requiring structural refactoring later.
@@ -297,7 +297,7 @@ app/
 ### Phase 1: Supabase Setup, Database Migration & Environment
 * Install Supabase packages (`@supabase/supabase-js`, `@supabase/ssr`).
 * Create environment variables template (`.env.example`) with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-* Author initial SQL migration script:
+* Author initial SQL migration script
   * Extensions (`uuid-ossp`).
   * Enums for roles, statuses, and payments.
   * Tables: `profiles`, `session_types`, `sessions`, `availability_rules`, `availability_exceptions`, `bookings`.
@@ -423,3 +423,4 @@ app/
    - Test user tries to access `/dashboard` or make a new booking; verifies access is denied with proper messaging.
 5. **Toast Placement:**
    - Trigger success and error actions across public, client, and admin pages to ensure toasts always display on the top-left with Auralixa branding.
+
