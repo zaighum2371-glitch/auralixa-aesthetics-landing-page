@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { type ProfileRow } from '@/types/database'
 import { ProfileForm } from '@/components/profile-form'
 import { SignOutButton } from '@/components/sign-out-button'
 import { Sparkles, ArrowLeft, LayoutDashboard, Shield } from 'lucide-react'
@@ -82,7 +83,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* Profile Form */}
-        <ProfileForm initialProfile={profile} />
+        <ProfileForm initialProfile={profile as ProfileRow} />
       </main>
     </div>
   )

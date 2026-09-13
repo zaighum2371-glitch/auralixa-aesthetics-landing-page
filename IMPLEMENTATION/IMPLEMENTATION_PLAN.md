@@ -80,6 +80,12 @@ To maintain an elevated, high-end medical spa aesthetic across all new pages, ta
   * `phone`: Text
   * `email`: Text
   * `avatar_url`: Text (stored in Supabase bucket `avatars`)
+  * `address_line1`: Text (nullable, residential street address)
+  * `address_line2`: Text (nullable, apartment/suite)
+  * `city`: Text (nullable, city or town)
+  * `state`: Text (nullable, county/state/region)
+  * `postal_code`: Text (nullable, postcode)
+  * `country`: Text (nullable, defaults to `'United Kingdom'`)
   * `date_of_birth`: Date (nullable)
   * `emergency_contact_name`: Text (nullable)
   * `emergency_contact_phone`: Text (nullable)
@@ -314,8 +320,12 @@ app/
 - [x] **User Profiles Page (`/profile`):**
   - [x] Dedicated profile management page accessible by all user role types (`user`, `client`, `admin`).
   - [x] View & update personal information (First Name, Last Name, Phone, Date of Birth, Avatar URL).
+  - [x] View & update complete residential and billing address (Line 1, Line 2, City, County/State, Postcode, Country).
   - [x] View & update emergency contact details (Contact Name, Contact Phone).
   - [x] View & update clinical contraindications and skin allergies (`medical_allergies`).
+  - [x] Account role & standing management (`user`, `client`, `admin` roles; `active`, `suspended`, `banned`, `rejected` statuses).
+  - [x] Disciplinary and restriction details (`ban_reason`, `banned_at`, `banned_by`) with active alert banner when restricted.
+  - [x] System identifiers & registry timestamps (copyable UUID Client ID, Created At, auto-updating Last Updated At).
   - [x] Role badge indicator (`Standard Member`, `Auralixa Client`, `Clinic Administrator`) and account status.
 - [x] **Root Page Header Profile Button & Dropdown Menu:**
   - [x] Replace static dashboard button with modern user profile avatar button in header.
