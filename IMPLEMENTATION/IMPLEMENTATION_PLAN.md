@@ -350,15 +350,60 @@ app/
   - [x] Admin Executive Dashboard (`/admin`) with clinic KPIs, live Supabase user directory, and interactive role switcher.
 
 ### Phase 2: Supabase Client, Auth & Role-Based Middleware
-* Create server, browser, and middleware Supabase client utilities in `lib/supabase/`.
-* Implement `middleware.ts` to enforce:
-  * Route protection for `/admin/*` (requires `role === 'admin'`).
-  * Route protection for `/dashboard`, `/bookings/*`, `/profile` (requires authenticated user).
-  * Redirection to `/unauthorized` or `/login` if session is missing or user status is `'banned'`/`'rejected'`.
-* Build Auth pages:
-  * `/login`: Email + password with Auralixa luxury styling.
-  * `/signup`: Registration page setting initial role `'user'`.
-  * `/forgot-password` and `/reset-password`.
+- [x] **Supabase Client, Auth & Role-Based Middleware:**
+  - [x] Create server, browser, and middleware Supabase client utilities in `lib/supabase/`.
+  - [x] Implement `middleware.ts` to enforce:
+    - [x] Route protection for `/admin/*` (requires `role === 'admin'` and `status === 'active'`).
+    - [x] Route protection for `/dashboard`, `/bookings/*`, `/profile` (requires authenticated user).
+    - [x] Redirection to `/unauthorized` or `/login` if session is missing or user status is `'banned'`/`'rejected'`.
+  - [x] Build Auth pages:
+    - [x] `/login`: Email + password with Auralixa luxury styling, password visibility toggle, error handling, and redirection.
+    - [x] `/signup`: Registration page setting initial role `'user'`.
+    - [ ] `/forgot-password` and `/reset-password` (deferred to subsequent iteration).
+- [x] **Supabase Database Schema Provisioning (All 12 Tables & RLS):**
+  - [x] Verify MCP connectivity to Supabase project `usjjskmucdwnfkdjbtgw`.
+  - [x] Provision missing `clinic_settings` table via migration `supabase/migrations/20260913020000_create_clinic_settings.sql` with RLS.
+  - [x] Verify active health and RLS policies across all 12 operational tables: `profiles`, `clinic_settings`, `session_types`, `sessions`, `availability_rules`, `availability_exceptions`, `bookings`, `clinical_treatment_records`, `user_login_history`, `session_history`, `booking_history`, `user_status_history`.
+- [x] **Admin UI Management Suite (Issue #18 — Mockup Data & Review):**
+  - [x] **Left Sidebar Navigation (`components/admin/admin-sidebar.tsx`):**
+    - [x] Navigation links for *Overview* (`/admin`), *Sessions & Categories* (`/admin/sessions`), *Bookings* (`/admin/bookings`), and *Clients* (`/admin/clients`).
+    - [x] Collapsible sidebar toggle (collapses to icon-only `w-20` rail or expands to full `w-64`, persisted in `localStorage`).
+    - [x] Live count badges for treatments, categories, pending bookings, and client cohort.
+    - [x] Fast shortcuts for quick creation actions.
+    - [x] One-click "Reset Mock Data" button to restore factory sample data.
+  - [x] **Header & User Profile Dropdown (`components/admin/admin-header.tsx` & `components/user-profile-menu.tsx`):**
+    - [x] Top-right profile displaying user avatar, full user name (`Clinic Administrator`), and role label.
+    - [x] Signature Auralixa dropdown menu with *Profile Settings*, *Dashboard*, and *Log Out* matching root page branding.
+    - [x] Small-text Breadcrumbs Navigation (`text-[11px] text-foreground/50`) dynamically reflecting active route hierarchy.
+    - [x] Real-time Notification Center popover with unread counter, event feed (bookings, payments, allergy alerts), "Mark all as read", and "Clear feed".
+  - [x] **Executive Dashboard Overview (`app/(admin)/admin/page.tsx` & `components/admin/admin-overview.tsx`):**
+    - [x] Top KPI summary cards for *Appointments*, *Treatments Catalog*, *Clients Registry*, and *In-Person Desk Revenue*.
+    - [x] Trend indicators on cards (`+24.2% MoM`, `100% attendance rate`, `Top performer`, etc.) with trend icon pills.
+    - [x] Date Range Selector filter (`Today`, `Last 7 Days`, `This Month`, `Quarter`) dynamically updating metrics and trend comparisons.
+    - [x] Dedicated Operational Quick Actions Bar with 5 shortcut tiles (*New Booking*, *Add Treatment*, *New Category*, *Register Client*, *Desk Payment*).
+    - [x] Contextual triage tabs (*All Operations*, *Unsettled Dues*, *Allergy Alerts*).
+    - [x] Upcoming Clinic Agenda preview and Treatment Categories distribution.
+    - [x] Live Supabase `profiles` directory and interactive role switcher preserved at the bottom for role testing.
+  - [x] **Sessions & Treatment Categories Suite (`app/(admin)/admin/sessions/page.tsx` & `components/admin/sessions-manager.tsx`):**
+    - [x] Dual-tab layout: *Treatments Catalog* and *Session Categories* taxonomy.
+    - [x] Contextual quick action bar to filter *Active Only*, *Drafts*, or trigger category creation.
+    - [x] Search treatments by title, benefits, or description; filter by category and status.
+    - [x] Full CRUD modals: Add Treatment, Edit Treatment, Archive Treatment, Add Category, Edit Category, Delete Category.
+  - [x] **Bookings & In-Person Desk Ledger (`app/(admin)/admin/bookings/page.tsx` & `components/admin/bookings-manager.tsx`):**
+    - [x] Status filter tabs: *All*, *Pending*, *Confirmed*, *Completed*, *Cancelled / No-Show*.
+    - [x] In-Person Desk Settlement Modal: Record payments via Chip & PIN Terminal, Cash, or Gift Voucher, automatically updating booking and client spend.
+    - [x] Contextual quick actions: *Unsettled Desk Dues*, *Confirmed Slots*, *Walk-In Booking*.
+    - [x] Full Appointment Dossier Modal with client contact, treatment parameters, and staff notes.
+    - [x] New Appointment and Edit Booking modals with slot calculation.
+    - [x] Quick status transitions: Confirm, Complete, and Cancel (with reason selector).
+  - [x] **Clients Directory & Clinical Intake CRM (`app/(admin)/admin/clients/page.tsx` & `components/admin/clients-manager.tsx`):**
+    - [x] Search across name, phone, city, or medical allergies; status filtering (*Active*, *Suspended*, *Banned*).
+    - [x] Contextual triage bar: *Allergy Alerts*, *Active Accounts*, *Register Patient*.
+    - [x] Prominent warning badges for medical allergies and intake contraindications.
+    - [x] Client 360 Dossier Modal: Residential address, emergency contacts, high-visibility clinical contraindications alert, and complete appointment history ledger with re-booking shortcut.
+    - [x] Register New Client and Edit Client modals with full medical intake fields.
+  - [x] **Mock Store Persistence (`components/admin/admin-store-provider.tsx`):**
+    - [x] Full client-side React Context store with `localStorage` persistence and event-driven notification dispatching.
 
 ### Phase 3: Brand UI System, Top-Left Toast & Shared Shells
 * Integrate `Sonner` toaster configured specifically to `position="top-left"` with custom styling matching `#F5F1EA`, `#533C2E`, and `#B2967D`.
