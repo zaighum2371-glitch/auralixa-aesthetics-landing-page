@@ -53,6 +53,7 @@ function formatForDateTimeLocal(dateStr: string | null): string {
 export function ProfileForm({ initialProfile }: { initialProfile: ProfileData }) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const isAdmin = initialProfile.role === 'admin'
 
   const [formData, setFormData] = useState({
     firstName: initialProfile.first_name || '',
@@ -253,13 +254,16 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
         emergency_contact_name: formData.emergencyContactName.trim() || null,
         emergency_contact_phone: formData.emergencyContactPhone.trim() || null,
         medical_allergies: formData.medicalAllergies.trim() || null,
-        // Role and status
-        role: formData.role as UserRole,
-        status: formData.status as UserStatus,
-        ban_reason: formData.banReason.trim() || null,
-        banned_at: formData.bannedAt ? new Date(formData.bannedAt).toISOString() : null,
-        banned_by: sanitizedBannedBy,
         updated_at: timestamp,
+      }
+
+      // Administrative fields are strictly restricted to administrator accounts
+      if (isAdmin) {
+        updatePayload.role = formData.role as UserRole
+        updatePayload.status = formData.status as UserStatus
+        updatePayload.ban_reason = formData.banReason.trim() || null
+        updatePayload.banned_at = formData.bannedAt ? new Date(formData.bannedAt).toISOString() : null
+        updatePayload.banned_by = sanitizedBannedBy
       }
 
       const { error: updateError } = await supabase
@@ -824,18 +828,26 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
       </div>
 
       {/* ========================================================================= */}
-      {/* SECTION 4: Account Role & Standing Status */}
+      {/* SECTIONS 4, 5, 6: Administrative Controls (Admin Accounts Only) */}
       {/* ========================================================================= */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
-        <div className="border-b border-border/60 pb-4">
-          <h3 className="font-serif text-xl font-medium text-foreground flex items-center gap-2">
-            <UserCog className="w-5 h-5 text-gold" />
-            <span>Account Role & Status Permissions</span>
-          </h3>
-          <p className="text-xs text-foreground/60 mt-1">
-            Configure permission tiers and account standing states in the database registry.
-          </p>
-        </div>
+      {isAdmin && (
+        <>
+          {/* SECTION 4: Account Role & Standing Status */}
+          <div className="bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="border-b border-border/60 pb-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-serif text-xl font-medium text-foreground flex items-center gap-2">
+                  <UserCog className="w-5 h-5 text-gold" />
+                  <span>Account Role & Status Permissions</span>
+                </h3>
+                <p className="text-xs text-foreground/60 mt-1">
+                  Configure permission tiers and account standing states in the database registry.
+                </p>
+              </div>
+              <span className="text-[11px] font-medium bg-purple-500/10 text-purple-700 border border-purple-500/20 px-2.5 py-0.5 rounded-full">
+                Admin Only
+              </span>
+            </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {/* 16. role */}
@@ -1073,6 +1085,8 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
           </div>
         </div>
       </div>
+    </>
+  )}
 
       {/* Save Button */}
       <div className="flex items-center justify-end gap-4 pt-4">
