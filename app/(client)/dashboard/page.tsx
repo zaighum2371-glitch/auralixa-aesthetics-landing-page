@@ -167,9 +167,9 @@ export default async function ClientDashboardPage() {
 
               <div>
                 <span className="text-xs text-foreground/50 block">Clinic Location</span>
-                <span className="font-medium text-foreground flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 text-gold" />
-                  Auralixa Suite, London
+                <span className="font-medium text-foreground flex items-start gap-1.5 mt-1 text-xs leading-relaxed">
+                  <MapPin className="w-3.5 h-3.5 text-gold shrink-0 mt-0.5" />
+                  <span>Castlemere Community Centre, 60 Tweedale St, OL11 1HH, Rochdale, Greater Manchester, United Kingdom</span>
                 </span>
               </div>
             </div>
