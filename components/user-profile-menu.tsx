@@ -209,7 +209,7 @@ export function UserProfileMenu() {
               className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/50 transition-colors"
             >
               <User className="w-4 h-4 text-gold" />
-              <span>Profile Settings</span>
+              <span>Profile</span>
             </Link>
 
             <Link
@@ -218,7 +218,7 @@ export function UserProfileMenu() {
               className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/50 transition-colors"
             >
               <LayoutDashboard className="w-4 h-4 text-gold" />
-              <span>{profile.role === 'admin' ? 'Admin Suite' : 'Dashboard'}</span>
+              <span>Dashboard</span>
             </Link>
           </div>
 
