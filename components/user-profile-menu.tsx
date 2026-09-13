@@ -16,7 +16,12 @@ interface UserProfile {
   email: string | null
 }
 
-export function UserProfileMenu() {
+interface UserProfileMenuProps {
+  showName?: boolean
+  className?: string
+}
+
+export function UserProfileMenu({ showName = false, className = '' }: UserProfileMenuProps = {}) {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -139,7 +144,9 @@ export function UserProfileMenu() {
       {/* Profile Button / Avatar */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 rounded-full border border-border/80 hover:border-gold focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all bg-card shadow-xs group"
+        className={`flex items-center gap-2.5 rounded-full border border-border/80 hover:border-gold focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all bg-card shadow-xs group ${
+          showName ? 'py-1 pl-1 pr-3' : 'p-1'
+        } ${className}`}
         aria-label="User profile menu"
         aria-expanded={isOpen}
       >
@@ -147,14 +154,20 @@ export function UserProfileMenu() {
           <img
             src={profile.avatar_url}
             alt={displayName}
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-8 h-8 rounded-full object-cover shrink-0"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground font-serif text-xs font-medium flex items-center justify-center tracking-wider">
+          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground font-serif text-xs font-medium flex items-center justify-center tracking-wider shrink-0">
             {initials}
           </div>
         )}
-        <ChevronDown className="w-3.5 h-3.5 text-foreground/50 group-hover:text-foreground transition-transform duration-200 hidden sm:block mr-1" />
+        {showName && (
+          <div className="hidden sm:flex flex-col text-left mr-0.5">
+            <span className="text-xs font-medium text-foreground leading-tight">{displayName}</span>
+            <span className="text-[10px] text-foreground/50 leading-none capitalize">{roleLabel}</span>
+          </div>
+        )}
+        <ChevronDown className="w-3.5 h-3.5 text-foreground/50 group-hover:text-foreground transition-transform duration-200" />
       </button>
 
       {/* Dropdown Menu */}
