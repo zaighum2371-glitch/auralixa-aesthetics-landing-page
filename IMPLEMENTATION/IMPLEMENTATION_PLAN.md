@@ -300,13 +300,16 @@ app/
 
 ## Step-by-Step Implementation Roadmap
 
-### Phase 1: Database Setup, Auth, Profiles & Role Dashboards
+### Phase 1: Database Setup, Auth, Profiles & Role Dashboards ✅ (Completed)
 - [x] **Supabase Setup & Complete Schema Migration:**
   - [x] Install `@supabase/supabase-js` and `@supabase/ssr`.
   - [x] Configure `.env` / `.env.local` with Supabase project keys (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
   - [x] Create enums: `user_role`, `user_status`, `session_status`, `booking_status`, `payment_status`, `audit_action`.
   - [x] Create all 11 core & audit tables with RLS enabled (`profiles`, `session_types`, `sessions`, `availability_rules`, `availability_exceptions`, `bookings`, `user_login_history`, `session_history`, `booking_history`, `user_status_history`, `clinical_treatment_records`).
   - [x] Configure database triggers (`handle_new_user()` auto-provisioning profile on signup, `handle_updated_at()`).
+  - [x] Add complete residential & billing address schema to `public.profiles` (`address_line1`, `address_line2`, `city`, `state`, `postal_code`, `country`) via SQL migration (`20260913010000_add_address_to_profiles.sql`).
+- [x] **TypeScript Database Schema & Type Safety:**
+  - [x] Generate comprehensive `types/database.ts` covering all tables, enums, rows, inserts, and updates for strict end-to-end type safety.
 - [x] **Supabase Clients & Role-Based Middleware:**
   - [x] Create client utilities: browser (`lib/supabase/client.ts`), server (`lib/supabase/server.ts`), and middleware (`lib/supabase/middleware.ts`).
   - [x] Route protection for `/admin/*` (strictly requires `role === 'admin'`).
@@ -327,6 +330,8 @@ app/
   - [x] Disciplinary and restriction details (`ban_reason`, `banned_at`, `banned_by`) with active alert banner when restricted.
   - [x] System identifiers & registry timestamps (copyable UUID Client ID, Created At, auto-updating Last Updated At).
   - [x] Role badge indicator (`Standard Member`, `Auralixa Client`, `Clinic Administrator`) and account status.
+  - [x] Strict Role-Based Access Control (RBAC): Role selector, moderation records, and system registry blocks are strictly restricted to administrator accounts only, hiding privilege escalation options from normal client accounts.
+  - [x] Submission payload protection: Client accounts only submit personal, address, and clinical preference updates, preventing non-admin role escalation.
 - [x] **Root Page Header Profile Button & Dropdown Menu:**
   - [x] Replace static dashboard button with modern user profile avatar button in header.
   - [x] Display user profile picture if available, or initials/placeholder fallback.
