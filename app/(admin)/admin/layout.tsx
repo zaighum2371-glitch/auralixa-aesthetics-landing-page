@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Sparkles, LayoutDashboard, Calendar, Users, FileText, Settings, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { Sparkles, LayoutDashboard, Calendar, Users, FileText, Settings, ShieldCheck, ArrowLeft, User } from 'lucide-react'
 import { SignOutButton } from '@/components/sign-out-button'
 
 export default function AdminLayout({
@@ -71,7 +71,14 @@ export default function AdminLayout({
         </div>
 
         {/* Footer info in sidebar */}
-        <div className="pt-6 border-t border-border/60 space-y-3">
+        <div className="pt-6 border-t border-border/60 space-y-2.5">
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 text-xs text-foreground/70 hover:text-foreground transition-colors"
+          >
+            <User className="w-3.5 h-3.5 text-gold" />
+            <span>Profile Settings</span>
+          </Link>
           <Link
             href="/dashboard"
             className="flex items-center gap-2 text-xs text-foreground/60 hover:text-foreground transition-colors"

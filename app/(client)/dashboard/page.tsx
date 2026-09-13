@@ -173,6 +173,19 @@ export default async function ClientDashboardPage() {
                 </span>
               </div>
             </div>
+
+            <div className="pt-2 border-t border-border/60">
+              <Link
+                href="/profile"
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  "w-full border-border hover:bg-muted text-foreground flex items-center justify-center gap-2"
+                )}
+              >
+                <User className="w-3.5 h-3.5 text-gold" />
+                <span>Manage Profile Details</span>
+              </Link>
+            </div>
           </div>
         </div>
       </main>

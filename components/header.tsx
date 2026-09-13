@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { User } from 'lucide-react'
+import { UserProfileMenu } from '@/components/user-profile-menu'
 
 interface HeaderProps {
   onBookingClick: () => void
@@ -52,15 +52,9 @@ export function Header({ onBookingClick }: HeaderProps) {
             </a>
           </nav>
 
-          {/* CTA Button and Social */}
+          {/* CTA Button, User Profile Menu, and Social */}
           <div className="flex items-center gap-3 sm:gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-foreground/80 hover:text-foreground flex items-center gap-1.5 transition-colors px-2 py-1"
-            >
-              <User className="w-4 h-4 text-gold" />
-              <span className="hidden sm:inline">Portal</span>
-            </Link>
+            <UserProfileMenu />
             <Button 
               onClick={onBookingClick}
               className="bg-primary text-primary-foreground hover:bg-primary/90"

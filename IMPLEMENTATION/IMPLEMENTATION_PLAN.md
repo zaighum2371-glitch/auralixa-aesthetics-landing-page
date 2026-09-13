@@ -294,16 +294,38 @@ app/
 
 ## Step-by-Step Implementation Roadmap
 
-### Phase 1: Supabase Setup, Database Migration & Environment
-* Install Supabase packages (`@supabase/supabase-js`, `@supabase/ssr`).
-* Create environment variables template (`.env.example`) with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-* Author initial SQL migration script
-  * Extensions (`uuid-ossp`).
-  * Enums for roles, statuses, and payments.
-  * Tables: `profiles`, `session_types`, `sessions`, `availability_rules`, `availability_exceptions`, `bookings`.
-  * Audit tables: `user_login_history`, `session_history`, `booking_history`, `user_status_history`, `clinical_treatment_records`.
-  * Row Level Security (RLS) policies enforcing client data isolation and admin privileges.
-  * Database triggers for auto-creating `profiles` on auth signup and auto-updating `updated_at` timestamps.
+### Phase 1: Database Setup, Auth, Profiles & Role Dashboards
+- [x] **Supabase Setup & Complete Schema Migration:**
+  - [x] Install `@supabase/supabase-js` and `@supabase/ssr`.
+  - [x] Configure `.env` / `.env.local` with Supabase project keys (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+  - [x] Create enums: `user_role`, `user_status`, `session_status`, `booking_status`, `payment_status`, `audit_action`.
+  - [x] Create all 11 core & audit tables with RLS enabled (`profiles`, `session_types`, `sessions`, `availability_rules`, `availability_exceptions`, `bookings`, `user_login_history`, `session_history`, `booking_history`, `user_status_history`, `clinical_treatment_records`).
+  - [x] Configure database triggers (`handle_new_user()` auto-provisioning profile on signup, `handle_updated_at()`).
+- [x] **Supabase Clients & Role-Based Middleware:**
+  - [x] Create client utilities: browser (`lib/supabase/client.ts`), server (`lib/supabase/server.ts`), and middleware (`lib/supabase/middleware.ts`).
+  - [x] Route protection for `/admin/*` (strictly requires `role === 'admin'`).
+  - [x] Route protection for `/dashboard` and `/profile` (requires authenticated user).
+  - [x] Route restriction handling (`/not-authorized`) when non-admins attempt to access `/admin`.
+- [x] **Authentication Suite:**
+  - [x] `/login` page with role-aware redirection (`user`/`client` ➔ `/dashboard`, `admin` ➔ `/admin`).
+  - [x] `/signup` page with first name, last name, phone, email, and password.
+  - [x] `/auth/callback` token exchange handler.
+  - [x] Provision clinic administrator account on Supabase (`admin@auralixa.com`).
+- [x] **User Profiles Page (`/profile`):**
+  - [x] Dedicated profile management page accessible by all user role types (`user`, `client`, `admin`).
+  - [x] View & update personal information (First Name, Last Name, Phone, Date of Birth, Avatar URL).
+  - [x] View & update emergency contact details (Contact Name, Contact Phone).
+  - [x] View & update clinical contraindications and skin allergies (`medical_allergies`).
+  - [x] Role badge indicator (`Standard Member`, `Auralixa Client`, `Clinic Administrator`) and account status.
+- [x] **Root Page Header Profile Button & Dropdown Menu:**
+  - [x] Replace static dashboard button with modern user profile avatar button in header.
+  - [x] Display user profile picture if available, or initials/placeholder fallback.
+  - [x] Interactive dropdown menu with user summary, role badge, and navigation items.
+  - [x] Hyperlink to the newly created `/profile` page ("Profile Settings").
+  - [x] Working "Log Out" action cleanly terminating session and updating UI state.
+- [x] **Mockup Role Dashboards:**
+  - [x] Client Portal Dashboard (`/dashboard`) with member role badge and appointment summary.
+  - [x] Admin Executive Dashboard (`/admin`) with clinic KPIs, live Supabase user directory, and interactive role switcher.
 
 ### Phase 2: Supabase Client, Auth & Role-Based Middleware
 * Create server, browser, and middleware Supabase client utilities in `lib/supabase/`.
