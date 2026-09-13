@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getAvatarSignedUrl, uploadAvatar } from '@/lib/supabase/avatar'
 import { Button } from '@/components/ui/button'
 import { 
   User, 
@@ -16,7 +17,9 @@ import {
   Loader2, 
   HeartHandshake, 
   AlertTriangle,
-  Camera
+  Camera,
+  Upload,
+  Trash2
 } from 'lucide-react'
 
 interface ProfileData {
@@ -37,6 +40,7 @@ interface ProfileData {
 
 export function ProfileForm({ initialProfile }: { initialProfile: ProfileData }) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
     firstName: initialProfile.first_name || '',
@@ -49,9 +53,96 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
     medicalAllergies: initialProfile.medical_allergies || '',
   })
 
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Resolve signed avatar URL on mount or when avatar_url changes
+  useEffect(() => {
+    let isMounted = true
+    async function loadAvatar() {
+      if (!initialProfile.avatar_url) {
+        setAvatarPreview(null)
+        return
+      }
+      const supabase = createClient()
+      const signed = await getAvatarSignedUrl(supabase, initialProfile.avatar_url)
+      if (isMounted) {
+        setAvatarPreview(signed)
+      }
+    }
+    loadAvatar()
+    return () => {
+      isMounted = false
+    }
+  }, [initialProfile.avatar_url])
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingAvatar(true)
+    setError(null)
+    setSuccess(false)
+
+    try {
+      const supabase = createClient()
+      const { path, signedUrl } = await uploadAvatar(supabase, initialProfile.id, file)
+
+      // Update database profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: path })
+        .eq('id', initialProfile.id)
+
+      if (updateError) {
+        throw updateError
+      }
+
+      setFormData((prev) => ({ ...prev, avatarUrl: path }))
+      setAvatarPreview(signedUrl)
+      setSuccess(true)
+      router.refresh()
+    } catch (err: any) {
+      setError(err?.message || 'Failed to upload profile picture.')
+    } finally {
+      setUploadingAvatar(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleRemoveAvatar = async () => {
+    if (!formData.avatarUrl && !avatarPreview) return
+
+    setUploadingAvatar(true)
+    setError(null)
+    setSuccess(false)
+
+    try {
+      const supabase = createClient()
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', initialProfile.id)
+
+      if (updateError) {
+        throw updateError
+      }
+
+      setFormData((prev) => ({ ...prev, avatarUrl: '' }))
+      setAvatarPreview(null)
+      setSuccess(true)
+      router.refresh()
+    } catch (err: any) {
+      setError(err?.message || 'Failed to remove profile picture.')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -131,27 +222,76 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
       )}
 
       {/* Header Profile Summary Card */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center gap-6">
-        {/* Avatar Display / Preview */}
-        <div className="relative group shrink-0">
-          {formData.avatarUrl ? (
-            <img
-              src={formData.avatarUrl}
-              alt="Avatar"
-              className="w-24 h-24 rounded-full object-cover border-2 border-gold/40 shadow-sm"
-              onError={(e) => {
-                // Fallback to placeholder if URL fails
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-primary text-primary-foreground font-serif text-2xl font-medium flex items-center justify-center border-2 border-gold/40 shadow-sm">
-              {initials}
+      <div className="bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={handleAvatarFileChange}
+          disabled={uploadingAvatar}
+        />
+
+        {/* Avatar Display / Hover Trigger */}
+        <div className="flex flex-col items-center gap-3 shrink-0">
+          <div
+            onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+            className="relative group shrink-0 cursor-pointer"
+            title="Click to change profile picture"
+          >
+            {avatarPreview ? (
+              <img
+                src={avatarPreview}
+                alt="Avatar"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gold/40 shadow-sm transition-opacity group-hover:opacity-80"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-primary text-primary-foreground font-serif text-2xl font-medium flex items-center justify-center border-2 border-gold/40 shadow-sm group-hover:bg-primary/90 transition-colors">
+                {initials}
+              </div>
+            )}
+
+            {/* Hover / Loading Overlay */}
+            <div className={`absolute inset-0 rounded-full bg-black/45 flex flex-col items-center justify-center text-white transition-opacity ${uploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              {uploadingAvatar ? (
+                <Loader2 className="w-6 h-6 animate-spin text-gold" />
+              ) : (
+                <>
+                  <Camera className="w-5 h-5 text-gold" />
+                  <span className="text-[10px] font-medium tracking-wide mt-0.5">Change</span>
+                </>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg border border-border hover:border-gold hover:bg-muted/50 text-foreground transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <Upload className="w-3 h-3 text-gold" />
+              <span>{uploadingAvatar ? 'Uploading...' : 'Upload'}</span>
+            </button>
+            {(avatarPreview || formData.avatarUrl) && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                disabled={uploadingAvatar}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg border border-border/60 hover:border-destructive hover:bg-destructive/10 text-destructive/80 hover:text-destructive transition-all disabled:opacity-50 cursor-pointer"
+                title="Remove photo"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span className="sr-only sm:not-sr-only">Remove</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="text-center sm:text-left space-y-1.5 flex-1">
+        <div className="text-center sm:text-left space-y-2 flex-1">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
             <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-medium border ${roleBadge.bg}`}>
               {initialProfile.role === 'admin' ? (
@@ -183,6 +323,13 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
               day: 'numeric'
             })}
           </p>
+
+          <div className="pt-2 border-t border-border/40 text-[11px] text-foreground/60 flex items-center justify-center sm:justify-start gap-1.5">
+            <Shield className="w-3.5 h-3.5 text-gold shrink-0" />
+            <span>
+              Profile photo stored in private cloud storage. Visible only to you and clinic administrators.
+            </span>
+          </div>
         </div>
       </div>
 
@@ -280,19 +427,32 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
 
           <div>
             <label className="block text-xs font-medium uppercase tracking-wider text-foreground/70 mb-1.5">
-              Profile Photo URL
+              Profile Photo Vault Status
             </label>
-            <div className="relative">
-              <Camera className="w-4 h-4 text-foreground/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="url"
-                name="avatarUrl"
-                value={formData.avatarUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/photo.jpg"
-                className="w-full pl-10 pr-3.5 py-2.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/60 focus:border-gold transition-all"
-              />
+            <div className="relative flex items-center gap-3 px-3.5 py-2.5 bg-background border border-border rounded-lg text-sm text-foreground">
+              <Camera className="w-4 h-4 text-gold shrink-0" />
+              <div className="flex-1 truncate">
+                {formData.avatarUrl ? (
+                  <span className="font-mono text-xs text-foreground/80 truncate block">
+                    {formData.avatarUrl}
+                  </span>
+                ) : (
+                  <span className="text-foreground/40 text-xs italic">
+                    No photo uploaded (using default initials)
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-xs text-gold hover:underline font-medium shrink-0 cursor-pointer"
+              >
+                {formData.avatarUrl ? 'Change' : 'Upload'}
+              </button>
             </div>
+            <span className="text-[11px] text-foreground/50 mt-1 block">
+              PNG, JPG, WebP, or GIF up to 5MB. Private Supabase bucket storage.
+            </span>
           </div>
         </div>
       </div>

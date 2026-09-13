@@ -228,7 +228,7 @@ To maintain an elevated, high-end medical spa aesthetic across all new pages, ta
 
 ### Storage Buckets
 1. **`treatment-media`** (Public Read, Admin Write): High-resolution session imagery, treatment demonstration assets.
-2. **`client-avatars`** (Public Read, Authenticated User Write): Profile avatars.
+2. **`avatars`** (Private, Restricted by RLS): User profile pictures. Users can only see and manage their own pictures (`folder = auth.uid()`), while clinic administrators can see and manage all pictures.
 3. **`clinical-records`** (Private, Restricted by RLS): Private before/after treatment documentation only accessible by the respective client and administrators.
 
 ### Edge Functions
@@ -323,6 +323,13 @@ app/
   - [x] Interactive dropdown menu with user summary, role badge, and navigation items.
   - [x] Hyperlink to the newly created `/profile` page ("Profile Settings").
   - [x] Working "Log Out" action cleanly terminating session and updating UI state.
+- [x] **Supabase Avatars Storage Bucket & Strict Privacy RLS:**
+  - [x] Private Supabase storage bucket `avatars` with 5MB limit and JPEG/PNG/WebP/GIF restriction.
+  - [x] Strict Storage RLS: `user` and `client` roles can only view/upload/delete their own avatar.
+  - [x] Strict Storage RLS: `admin` role has global read and management access to all avatars.
+  - [x] Interactive profile photo editor on `/profile` with file picker, hover camera overlay, image preview, signed URL resolution, and remove action.
+  - [x] Header profile button and dropdown header with signed avatar image resolution.
+  - [x] Admin Executive Dashboard user directory table showing resolved avatar pictures for all registered profiles.
 - [x] **Mockup Role Dashboards:**
   - [x] Client Portal Dashboard (`/dashboard`) with member role badge and appointment summary.
   - [x] Admin Executive Dashboard (`/admin`) with clinic KPIs, live Supabase user directory, and interactive role switcher.

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { Users, Calendar, Sparkles, PoundSterling, Shield, UserCheck, ShieldAlert } from 'lucide-react'
 import { RoleManager } from '@/components/admin/role-manager'
+import { extractStoragePath } from '@/lib/supabase/avatar'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
@@ -17,6 +18,30 @@ export default async function AdminDashboardPage() {
   const totalAdmins = userList.filter((p) => p.role === 'admin').length
   const totalClients = userList.filter((p) => p.role === 'client').length
   const standardMembers = userList.filter((p) => p.role === 'user').length
+
+  // Batch resolve signed URLs for users with avatars stored in private bucket
+  const avatarPaths = userList
+    .map((p) => extractStoragePath(p.avatar_url))
+    .filter((p): p is string => Boolean(p))
+
+  const signedUrlMap: Record<string, string> = {}
+  if (avatarPaths.length > 0) {
+    try {
+      const { data: signedData } = await supabase.storage
+        .from('avatars')
+        .createSignedUrls(avatarPaths, 60 * 60 * 24)
+
+      if (signedData) {
+        signedData.forEach((item) => {
+          if (item.signedUrl && item.path) {
+            signedUrlMap[item.path] = item.signedUrl
+          }
+        })
+      }
+    } catch (err) {
+      console.error('Failed to create signed URLs for admin view:', err)
+    }
+  }
 
   // Server Action to update user role for testing
   async function updateUserRole(userId: string, newRole: 'user' | 'client' | 'admin') {
@@ -124,13 +149,41 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {userList.map((userProfile) => (
-                  <tr key={userProfile.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="py-3 px-3 font-medium text-foreground">
-                      {userProfile.first_name || userProfile.last_name
-                        ? `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim()
-                        : 'Unnamed User'}
-                    </td>
+                {userList.map((userProfile) => {
+                  const storagePath = extractStoragePath(userProfile.avatar_url)
+                  const avatarSrc = storagePath ? signedUrlMap[storagePath] : userProfile.avatar_url
+                  const initials = [userProfile.first_name?.[0], userProfile.last_name?.[0]]
+                    .filter(Boolean)
+                    .join('')
+                    .toUpperCase() || userProfile.email?.[0]?.toUpperCase() || 'U'
+
+                  return (
+                    <tr key={userProfile.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-3">
+                          {avatarSrc ? (
+                            <img
+                              src={avatarSrc}
+                              alt={userProfile.first_name || 'User'}
+                              className="w-9 h-9 rounded-full object-cover border border-gold/40 shrink-0 shadow-xs"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-primary/10 text-primary border border-border/80 font-serif text-xs font-medium flex items-center justify-center shrink-0">
+                              {initials}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="font-medium text-foreground">
+                              {userProfile.first_name || userProfile.last_name
+                                ? `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim()
+                                : 'Unnamed User'}
+                            </div>
+                            <div className="text-[11px] text-foreground/50 truncate">
+                              ID: {userProfile.id.slice(0, 8)}...
+                            </div>
+                          </div>
+                        </div>
+                      </td>
                     <td className="py-3 px-3 text-foreground/80 font-mono text-xs">
                       {userProfile.email}
                     </td>
@@ -158,7 +211,7 @@ export default async function AdminDashboardPage() {
                       />
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>

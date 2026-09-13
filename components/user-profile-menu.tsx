@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getAvatarSignedUrl } from '@/lib/supabase/avatar'
 import { User, LogOut, LayoutDashboard, Shield, Sparkles, ChevronDown } from 'lucide-react'
 
 interface UserProfile {
@@ -41,8 +42,14 @@ export function UserProfileMenu() {
           .single()
 
         if (data) {
+          let resolvedAvatarUrl = data.avatar_url
+          if (data.avatar_url) {
+            resolvedAvatarUrl = await getAvatarSignedUrl(supabase, data.avatar_url)
+          }
+
           setProfile({
             ...data,
+            avatar_url: resolvedAvatarUrl,
             email: data.email || user.email || null,
           })
         }
@@ -155,13 +162,28 @@ export function UserProfileMenu() {
         <div className="absolute right-0 mt-2 w-64 bg-card border border-border/90 rounded-2xl shadow-lg py-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-border/60">
-            <p className="text-sm font-medium text-foreground truncate">
-              {displayName}
-            </p>
-            <p className="text-xs text-foreground/60 truncate mt-0.5">
-              {profile.email}
-            </p>
-            <div className="mt-2">
+            <div className="flex items-center gap-3">
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={displayName}
+                  className="w-10 h-10 rounded-full object-cover border border-gold/40 shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground font-serif text-sm font-medium flex items-center justify-center shrink-0 border border-gold/40">
+                  {initials}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {displayName}
+                </p>
+                <p className="text-xs text-foreground/60 truncate mt-0.5">
+                  {profile.email}
+                </p>
+              </div>
+            </div>
+            <div className="mt-2.5">
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
                 profile.role === 'admin'
                   ? 'bg-purple-500/10 text-purple-700 border-purple-500/20'
