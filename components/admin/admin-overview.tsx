@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import {
   Calendar,
@@ -16,6 +16,11 @@ import {
   CalendarPlus,
   Shield,
   ShieldAlert,
+  TrendingUp,
+  Filter,
+  CheckCircle2,
+  AlertTriangle,
+  Zap,
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { RoleManager } from './role-manager'
@@ -26,8 +31,16 @@ interface AdminOverviewProps {
   updateUserRole: (userId: string, newRole: 'user' | 'client' | 'admin') => Promise<void>
 }
 
+type DateRange = 'today' | '7d' | 'month' | 'quarter'
+type ContextualFocus = 'all' | 'unsettled' | 'today_agenda' | 'intake_alerts'
+
 export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminOverviewProps) {
-  const { categories, sessions, clients, bookings, isHydrated } = useAdminStore()
+  const { categories, sessions, clients, bookings, recordDeskPayment } = useAdminStore()
+
+  // Date Range Filter State
+  const [dateRange, setDateRange] = useState<DateRange>('month')
+  // Contextual Quick Action Focus
+  const [contextFocus, setContextFocus] = useState<ContextualFocus>('all')
 
   // Dynamic metrics from mock store
   const totalSessions = sessions.length
@@ -45,17 +58,76 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
     .reduce((sum, b) => sum + b.total_price, 0)
 
   const pendingInPersonSettlement = bookings
-    .filter((b) => b.payment_status === 'pending_in_person' && b.status !== 'cancelled_by_admin' && b.status !== 'cancelled_by_client')
+    .filter(
+      (b) =>
+        b.payment_status === 'pending_in_person' &&
+        b.status !== 'cancelled_by_admin' &&
+        b.status !== 'cancelled_by_client'
+    )
     .reduce((sum, b) => sum + b.total_price, 0)
 
-  // Recent 4 bookings for agenda preview
-  const recentBookings = [...bookings]
-    .sort((a, b) => (a.appointment_date < b.appointment_date ? 1 : -1))
-    .slice(0, 4)
+  // Trend indicators dynamic per dateRange
+  const trends = {
+    today: {
+      appointments: '+2 scheduled today',
+      appointmentsPct: '100% attendance',
+      revenue: '£195.00 collected',
+      revenuePct: '+14.5% vs yesterday',
+      clients: '+1 new intake',
+      clientsPct: 'Harley St cohort',
+      catalog: 'Active catalog',
+    },
+    '7d': {
+      appointments: '+5 this week',
+      appointmentsPct: '+18.4% vs last week',
+      revenue: `£${totalInPersonRevenue.toFixed(0)} past 7d`,
+      revenuePct: '+28.2% weekly gain',
+      clients: '+3 registered',
+      clientsPct: '+15.0% cohort',
+      catalog: '5 categories active',
+    },
+    month: {
+      appointments: `${bookings.length} in cycle`,
+      appointmentsPct: '+24.2% MoM',
+      revenue: `£${totalInPersonRevenue.toFixed(0)} total`,
+      revenuePct: '+32.4% MoM',
+      clients: `${totalClients} registered`,
+      clientsPct: '+12.8% growth',
+      catalog: '7 live treatments',
+    },
+    quarter: {
+      appointments: 'Q3 target on track',
+      appointmentsPct: '+35.0% QoQ',
+      revenue: `£${(totalInPersonRevenue * 1.8).toFixed(0)} run-rate`,
+      revenuePct: '+41.8% QoQ',
+      clients: 'VIP cohort expanding',
+      clientsPct: '+45.0% intake increase',
+      catalog: 'Expanding Phase 2',
+    },
+  }[dateRange]
+
+  // Contextual Agenda Filter
+  const filteredAgenda = bookings.filter((b) => {
+    if (contextFocus === 'unsettled') {
+      return b.payment_status === 'pending_in_person' && b.status !== 'cancelled_by_admin'
+    }
+    if (contextFocus === 'today_agenda') {
+      return b.status === 'confirmed' || b.status === 'pending'
+    }
+    return true
+  }).slice(0, 5)
+
+  // Clients with allergy alerts
+  const allergyAlertClients = clients.filter(
+    (c) =>
+      c.medical_allergies &&
+      c.medical_allergies.toLowerCase() !== 'none' &&
+      c.medical_allergies.toLowerCase() !== 'none recorded'
+  )
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Top Banner */}
+      {/* Top Banner & Date Range Selector */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-6">
         <div>
           <div className="flex items-center gap-2">
@@ -76,31 +148,51 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
             Clinic Overview
           </h1>
           <p className="text-sm text-foreground/70 mt-1 max-w-2xl">
-            Central administrative console for Harley Street operations. Manage appointment schedules, treatment offerings, clinical intake records, and front desk payment settlements.
+            Central administrative console for Harley Street operations. Monitor real-time performance trends, manage schedules, and process front-desk settlements.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start md:self-auto">
-          <Link
-            href="/admin/bookings?action=new"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-95 shadow-sm transition-all"
-          >
-            <CalendarPlus className="w-4 h-4 text-gold" />
-            <span>New Booking</span>
-          </Link>
-          <Link
-            href="/admin/sessions?action=new-treatment"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border/80 bg-card hover:bg-muted/40 text-sm font-medium text-foreground transition-colors shadow-xs"
-          >
-            <PlusCircle className="w-4 h-4 text-gold" />
-            <span>Add Session</span>
-          </Link>
+        {/* Date Range Selector Filter */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start md:self-auto">
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/70 text-xs">
+            <Filter className="w-3 h-3 text-foreground/40 ml-1.5 hidden sm:block" />
+            {(
+              [
+                { id: 'today', label: 'Today' },
+                { id: '7d', label: 'Last 7 Days' },
+                { id: 'month', label: 'This Month' },
+                { id: 'quarter', label: 'Quarter' },
+              ] as const
+            ).map((rng) => (
+              <button
+                key={rng.id}
+                onClick={() => setDateRange(rng.id)}
+                className={`px-2.5 py-1.5 rounded-lg font-medium transition-all ${
+                  dateRange === rng.id
+                    ? 'bg-card text-foreground font-semibold shadow-xs border border-border/80'
+                    : 'text-foreground/60 hover:text-foreground'
+                }`}
+              >
+                {rng.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/bookings?action=new"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-medium hover:opacity-95 shadow-sm transition-all"
+            >
+              <CalendarPlus className="w-3.5 h-3.5 text-gold" />
+              <span>New Booking</span>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Summary Cards Below Header */}
+      {/* Summary Cards with Trend Indicators */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Bookings Summary */}
+        {/* Bookings Summary with Trend */}
         <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
@@ -124,16 +216,28 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
               </span>
             </div>
           </div>
+
+          {/* Trend Indicator Pill */}
+          <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
+            <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-full font-medium border border-emerald-500/20">
+              <TrendingUp className="w-3 h-3" />
+              <span>{trends.appointmentsPct}</span>
+            </span>
+            <span className="text-foreground/40 font-mono text-[10px]">
+              {trends.appointments}
+            </span>
+          </div>
+
           <Link
             href="/admin/bookings"
-            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-1 group-hover:underline"
+            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-0.5 group-hover:underline"
           >
             <span>View booking ledger</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        {/* Sessions & Catalog */}
+        {/* Sessions & Catalog with Trend */}
         <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
@@ -153,16 +257,28 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
               <span>{totalCategories} categories</span>
             </div>
           </div>
+
+          {/* Trend Indicator Pill */}
+          <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
+            <span className="inline-flex items-center gap-1 text-gold bg-gold/10 px-2 py-0.5 rounded-full font-medium border border-gold/20">
+              <Sparkles className="w-3 h-3" />
+              <span>Top: Nano-Peptide</span>
+            </span>
+            <span className="text-foreground/40 font-mono text-[10px]">
+              {trends.catalog}
+            </span>
+          </div>
+
           <Link
             href="/admin/sessions"
-            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-1 group-hover:underline"
+            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-0.5 group-hover:underline"
           >
             <span>Manage sessions & types</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        {/* Registered Clients */}
+        {/* Registered Clients with Trend */}
         <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
@@ -182,16 +298,28 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
               <span>Harley St cohort</span>
             </div>
           </div>
+
+          {/* Trend Indicator Pill */}
+          <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
+            <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-full font-medium border border-emerald-500/20">
+              <TrendingUp className="w-3 h-3" />
+              <span>{trends.clientsPct}</span>
+            </span>
+            <span className="text-foreground/40 font-mono text-[10px]">
+              {trends.clients}
+            </span>
+          </div>
+
           <Link
             href="/admin/clients"
-            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-1 group-hover:underline"
+            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-0.5 group-hover:underline"
           >
             <span>Open client directory</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        {/* Desk Revenue */}
+        {/* In-Person Desk Revenue with Trend */}
         <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
@@ -211,9 +339,21 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
               </span>
             </div>
           </div>
+
+          {/* Trend Indicator Pill */}
+          <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
+            <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-full font-medium border border-emerald-500/20">
+              <TrendingUp className="w-3 h-3" />
+              <span>{trends.revenuePct}</span>
+            </span>
+            <span className="text-foreground/40 font-mono text-[10px]">
+              {trends.revenue}
+            </span>
+          </div>
+
           <Link
             href="/admin/bookings?filter=pending-payment"
-            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-1 group-hover:underline"
+            className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1 pt-0.5 group-hover:underline"
           >
             <span>View payment desk</span>
             <ArrowRight className="w-3 h-3" />
@@ -221,23 +361,58 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
         </div>
       </div>
 
-      {/* Dedicated Quicklinks / Quick Actions Bar */}
+      {/* Contextual Quick Actions Bar */}
       <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 className="font-serif text-lg font-medium text-foreground">
-              Operational Quick Actions
-            </h2>
-            <p className="text-xs text-foreground/60">
-              High-frequency administrative workflows for reception and clinic managers.
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-gold" />
+              <h2 className="font-serif text-lg font-medium text-foreground">
+                Contextual Quick Actions
+              </h2>
+            </div>
+            <p className="text-xs text-foreground/60 mt-0.5">
+              Instant operations and filtered operational views for front desk triage.
             </p>
           </div>
-          <span className="text-[11px] font-medium text-foreground/40 hidden sm:inline">
-            Auralixa Fast Actions
-          </span>
+
+          {/* Contextual Focus Tabs */}
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/70 text-xs">
+            <button
+              onClick={() => setContextFocus('all')}
+              className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                contextFocus === 'all'
+                  ? 'bg-card text-foreground font-semibold shadow-xs border border-border/80'
+                  : 'text-foreground/60 hover:text-foreground'
+              }`}
+            >
+              All Operations
+            </button>
+            <button
+              onClick={() => setContextFocus('unsettled')}
+              className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                contextFocus === 'unsettled'
+                  ? 'bg-amber-500/15 text-amber-900 font-semibold shadow-xs border border-amber-500/30'
+                  : 'text-foreground/60 hover:text-foreground'
+              }`}
+            >
+              Unsettled Dues (£{pendingInPersonSettlement.toFixed(0)})
+            </button>
+            <button
+              onClick={() => setContextFocus('intake_alerts')}
+              className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                contextFocus === 'intake_alerts'
+                  ? 'bg-red-500/15 text-red-900 font-semibold shadow-xs border border-red-500/30'
+                  : 'text-foreground/60 hover:text-foreground'
+              }`}
+            >
+              Allergy Alerts ({allergyAlertClients.length})
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {/* 5 Quick Action Shortcuts */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
           <Link
             href="/admin/bookings?action=new"
             className="p-4 rounded-xl border border-border/70 hover:border-gold hover:bg-muted/30 transition-all flex flex-col items-start gap-2 text-left group"
@@ -250,7 +425,7 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                 New Booking
               </span>
               <span className="text-[11px] text-foreground/50 leading-tight block mt-0.5">
-                Schedule patient slot
+                Schedule slot
               </span>
             </div>
           </Link>
@@ -267,7 +442,7 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                 Add Treatment
               </span>
               <span className="text-[11px] text-foreground/50 leading-tight block mt-0.5">
-                New clinical offering
+                New offering
               </span>
             </div>
           </Link>
@@ -284,7 +459,7 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                 New Category
               </span>
               <span className="text-[11px] text-foreground/50 leading-tight block mt-0.5">
-                Treatment taxonomy
+                Taxonomy
               </span>
             </div>
           </Link>
@@ -301,7 +476,7 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                 Register Client
               </span>
               <span className="text-[11px] text-foreground/50 leading-tight block mt-0.5">
-                Add medical profile
+                Add patient
               </span>
             </div>
           </Link>
@@ -318,24 +493,28 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                 Desk Payment
               </span>
               <span className="text-[11px] text-foreground/50 leading-tight block mt-0.5">
-                Collect in-person dues
+                Collect dues
               </span>
             </div>
           </Link>
         </div>
       </div>
 
-      {/* Two Columns: Agenda & Category Overview */}
+      {/* Two Columns: Agenda & Category Overview (Dynamically adjusted by context focus) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Recent Bookings & Agenda */}
+        {/* Left 2 Cols: Contextual Bookings & Agenda */}
         <div className="lg:col-span-2 bg-card border border-border/80 rounded-2xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-border/60 pb-3">
             <div>
               <h2 className="font-serif text-lg font-medium text-foreground">
-                Upcoming Clinic Agenda
+                {contextFocus === 'unsettled'
+                  ? 'Unsettled Desk Dues (Action Required)'
+                  : 'Upcoming Clinic Agenda'}
               </h2>
               <p className="text-xs text-foreground/60">
-                Scheduled consultations and treatment appointments at Harley Street.
+                {contextFocus === 'unsettled'
+                  ? 'Appointments awaiting in-person card terminal or cash settlement.'
+                  : 'Scheduled consultations and treatment appointments at Harley Street.'}
               </p>
             </div>
             <Link
@@ -347,13 +526,13 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
             </Link>
           </div>
 
-          {recentBookings.length === 0 ? (
+          {filteredAgenda.length === 0 ? (
             <div className="py-8 text-center text-sm text-foreground/50">
-              No appointments scheduled currently.
+              No appointments matching this focus filter.
             </div>
           ) : (
             <div className="space-y-3">
-              {recentBookings.map((b) => (
+              {filteredAgenda.map((b) => (
                 <div
                   key={b.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-border/60 hover:bg-muted/30 transition-colors gap-3"
@@ -373,7 +552,7 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                       </div>
                       <div className="text-xs text-foreground/70 mt-0.5">
                         {b.session_title} &bull;{' '}
-                        <span className="text-gold font-medium">£{b.total_price.toFixed(2)}</span>
+                        <span className="text-gold font-semibold">£{b.total_price.toFixed(2)}</span>
                       </div>
                       <div className="text-[11px] text-foreground/50 mt-1">
                         {b.appointment_date} &bull; {b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}
@@ -382,6 +561,17 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-center">
+                    {b.payment_status === 'pending_in_person' && (
+                      <button
+                        onClick={() => recordDeskPayment(b.id, 'Chip & PIN Terminal - Front Desk')}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1 rounded-lg border border-amber-500/30 transition-colors"
+                        title="One-click settle dues"
+                      >
+                        <CreditCard className="w-3 h-3 text-amber-700" />
+                        <span>Settle £{b.total_price.toFixed(0)}</span>
+                      </button>
+                    )}
+
                     <span
                       className={`text-[10px] uppercase font-semibold px-2.5 py-1 rounded-full border ${
                         b.status === 'confirmed'
@@ -408,64 +598,106 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
           )}
         </div>
 
-        {/* Right 1 Col: Categories Distribution */}
+        {/* Right 1 Col: Category Distribution or Allergy Triage */}
         <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
-            <div>
-              <h2 className="font-serif text-lg font-medium text-foreground">
-                Treatment Categories
-              </h2>
-              <p className="text-xs text-foreground/60">
-                {categories.length} registered clinical categories.
-              </p>
-            </div>
-            <Link
-              href="/admin/sessions?tab=categories"
-              className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1"
-            >
-              <span>Manage</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          <div className="space-y-2.5">
-            {categories.map((cat) => {
-              const sessionCount = sessions.filter(
-                (s) => s.session_type_id === cat.id || s.category_name === cat.name
-              ).length
-
-              return (
-                <div
-                  key={cat.id}
-                  className="p-3 rounded-xl border border-border/60 flex items-center justify-between hover:bg-muted/20 transition-colors"
-                >
-                  <div>
-                    <span className="text-xs font-medium text-foreground block">
-                      {cat.name}
-                    </span>
-                    <span className="text-[11px] text-foreground/50">
-                      Standard duration: {cat.default_duration_minutes}m (+{cat.buffer_minutes}m buffer)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-muted text-foreground/70">
-                      {sessionCount} treatments
-                    </span>
-                  </div>
+          {contextFocus === 'intake_alerts' ? (
+            <>
+              <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                <div>
+                  <h2 className="font-serif text-lg font-medium text-amber-900 flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-700" />
+                    <span>Intake Allergies</span>
+                  </h2>
+                  <p className="text-xs text-foreground/60">
+                    {allergyAlertClients.length} clients requiring clinician review.
+                  </p>
                 </div>
-              )
-            })}
-          </div>
+                <Link
+                  href="/admin/clients"
+                  className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1"
+                >
+                  <span>Directory</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
 
-          <div className="pt-2">
-            <Link
-              href="/admin/sessions?tab=categories&action=new-category"
-              className="w-full py-2.5 px-3 rounded-xl border border-dashed border-border/90 hover:border-gold text-xs font-medium text-foreground/70 hover:text-foreground flex items-center justify-center gap-2 transition-colors"
-            >
-              <PlusCircle className="w-3.5 h-3.5 text-gold" />
-              <span>Create New Category</span>
-            </Link>
-          </div>
+              <div className="space-y-2.5">
+                {allergyAlertClients.map((client) => (
+                  <div
+                    key={client.id}
+                    className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-1"
+                  >
+                    <div className="flex justify-between items-center text-xs font-semibold text-foreground">
+                      <span>{client.first_name} {client.last_name}</span>
+                      <span className="text-[10px] text-foreground/50">{client.city}</span>
+                    </div>
+                    <div className="text-xs text-amber-800 font-medium">
+                      ⚠️ {client.medical_allergies}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                <div>
+                  <h2 className="font-serif text-lg font-medium text-foreground">
+                    Treatment Categories
+                  </h2>
+                  <p className="text-xs text-foreground/60">
+                    {categories.length} registered clinical categories.
+                  </p>
+                </div>
+                <Link
+                  href="/admin/sessions?tab=categories"
+                  className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1"
+                >
+                  <span>Manage</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+
+              <div className="space-y-2.5">
+                {categories.map((cat) => {
+                  const sessionCount = sessions.filter(
+                    (s) => s.session_type_id === cat.id || s.category_name === cat.name
+                  ).length
+
+                  return (
+                    <div
+                      key={cat.id}
+                      className="p-3 rounded-xl border border-border/60 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                    >
+                      <div>
+                        <span className="text-xs font-medium text-foreground block">
+                          {cat.name}
+                        </span>
+                        <span className="text-[11px] text-foreground/50">
+                          Default: {cat.default_duration_minutes}m (+{cat.buffer_minutes}m buffer)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-muted text-foreground/70">
+                          {sessionCount} treatments
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="pt-2">
+                <Link
+                  href="/admin/sessions?tab=categories&action=new-category"
+                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-border/90 hover:border-gold text-xs font-medium text-foreground/70 hover:text-foreground flex items-center justify-center gap-2 transition-colors"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-gold" />
+                  <span>Create New Category</span>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -521,10 +753,10 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                             <img
                               src={avatarSrc}
                               alt={userProfile.first_name || 'User'}
-                              className="w-8 h-8 rounded-full object-cover border border-gold/40 shrink-0 shadow-xs"
+                              className="w-9 h-9 rounded-full object-cover border border-gold/40 shrink-0 shadow-xs"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary border border-border/80 font-serif text-xs font-medium flex items-center justify-center shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 text-primary border border-border/80 font-serif text-xs font-medium flex items-center justify-center shrink-0">
                               {initials}
                             </div>
                           )}

@@ -272,6 +272,58 @@ export function SessionsManager() {
       {/* ========================================================================= */}
       {activeTab === 'treatments' && (
         <div className="space-y-6">
+          {/* Contextual Quick Actions Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-muted/20 p-2.5 rounded-xl border border-border/50">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-foreground/40 uppercase tracking-wider mr-1">
+                Contextual Triage:
+              </span>
+              <button
+                onClick={() => {
+                  setCategoryFilter('all')
+                  setStatusFilter('all')
+                  setTreatmentSearch('')
+                }}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                  statusFilter === 'all' && categoryFilter === 'all' && !treatmentSearch
+                    ? 'bg-card text-foreground font-semibold shadow-2xs border border-border/70'
+                    : 'bg-muted/60 hover:bg-muted text-foreground/70'
+                }`}
+              >
+                All ({sessions.length})
+              </button>
+              <button
+                onClick={() => setStatusFilter('active')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                  statusFilter === 'active'
+                    ? 'bg-emerald-500/20 text-emerald-800 font-semibold border border-emerald-500/30'
+                    : 'bg-muted/60 hover:bg-muted text-foreground/70'
+                }`}
+              >
+                Active Only ({sessions.filter((s) => s.status === 'active').length})
+              </button>
+              <button
+                onClick={() => setStatusFilter('draft')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                  statusFilter === 'draft'
+                    ? 'bg-amber-500/20 text-amber-800 font-semibold border border-amber-500/30'
+                    : 'bg-muted/60 hover:bg-muted text-foreground/70'
+                }`}
+              >
+                Drafts ({sessions.filter((s) => s.status === 'draft').length})
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleOpenNewCategory}
+                className="px-2.5 py-1 rounded-lg border border-border/80 text-foreground/70 hover:text-foreground text-[11px] font-medium hover:bg-card transition-colors flex items-center gap-1"
+              >
+                <PlusCircle className="w-3 h-3 text-gold" />
+                <span>New Category</span>
+              </button>
+            </div>
+          </div>
+
           {/* Controls & Filter Bar */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card p-4 rounded-2xl border border-border/80 shadow-xs">
             <div className="flex flex-wrap items-center gap-3 flex-1">

@@ -197,6 +197,59 @@ export function ClientsManager() {
         </button>
       </div>
 
+      {/* Contextual Quick Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-muted/20 p-2.5 rounded-xl border border-border/50">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-semibold text-foreground/40 uppercase tracking-wider mr-1">
+            Contextual Triage:
+          </span>
+          <button
+            onClick={() => {
+              setStatusFilter('all')
+              setSearchQuery('')
+            }}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+              statusFilter === 'all' && !searchQuery
+                ? 'bg-card text-foreground font-semibold shadow-2xs border border-border/70'
+                : 'bg-muted/60 hover:bg-muted text-foreground/70'
+            }`}
+          >
+            All Clients ({clients.length})
+          </button>
+          <button
+            onClick={() => {
+              setStatusFilter('all')
+              setSearchQuery('penicillin')
+            }}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+              searchQuery.toLowerCase() === 'penicillin'
+                ? 'bg-amber-500/20 text-amber-900 font-semibold border border-amber-500/30'
+                : 'bg-muted/60 hover:bg-muted text-foreground/70'
+            }`}
+          >
+            ⚠️ Allergy Alerts ({clients.filter((c) => c.medical_allergies && c.medical_allergies.toLowerCase() !== 'none' && c.medical_allergies.toLowerCase() !== 'none recorded').length})
+          </button>
+          <button
+            onClick={() => setStatusFilter('active')}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+              statusFilter === 'active'
+                ? 'bg-emerald-500/20 text-emerald-800 font-semibold border border-emerald-500/30'
+                : 'bg-muted/60 hover:bg-muted text-foreground/70'
+            }`}
+          >
+            Active Accounts ({clients.filter((c) => c.status === 'active').length})
+          </button>
+        </div>
+
+        <button
+          onClick={handleOpenNew}
+          className="px-2.5 py-1 rounded-lg border border-border/80 text-foreground/70 hover:text-foreground text-[11px] font-medium hover:bg-card transition-colors flex items-center gap-1"
+        >
+          <PlusCircle className="w-3 h-3 text-gold" />
+          <span>+ Register Client</span>
+        </button>
+      </div>
+
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border/80 shadow-xs">
         <div className="relative w-full sm:w-80">

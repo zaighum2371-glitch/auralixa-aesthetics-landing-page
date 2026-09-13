@@ -225,6 +225,63 @@ export function BookingsManager() {
         </button>
       </div>
 
+      {/* Contextual Quick Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-muted/20 p-2.5 rounded-xl border border-border/50">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-semibold text-foreground/40 uppercase tracking-wider mr-1">
+            Contextual Triage:
+          </span>
+          <button
+            onClick={() => {
+              setStatusTab('all')
+              setPaymentFilter('all')
+              setSearchQuery('')
+            }}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+              statusTab === 'all' && paymentFilter === 'all' && !searchQuery
+                ? 'bg-card text-foreground font-semibold shadow-2xs border border-border/70'
+                : 'bg-muted/60 hover:bg-muted text-foreground/70'
+            }`}
+          >
+            All Bookings ({bookings.length})
+          </button>
+          <button
+            onClick={() => {
+              setStatusTab('all')
+              setPaymentFilter('pending_in_person')
+            }}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+              paymentFilter === 'pending_in_person'
+                ? 'bg-amber-500/20 text-amber-800 font-semibold border border-amber-500/30'
+                : 'bg-muted/60 hover:bg-muted text-foreground/70'
+            }`}
+          >
+            ⚡ Unsettled Desk Dues (£{bookings.filter((b) => b.payment_status === 'pending_in_person').length})
+          </button>
+          <button
+            onClick={() => {
+              setStatusTab('confirmed')
+              setPaymentFilter('all')
+            }}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+              statusTab === 'confirmed'
+                ? 'bg-emerald-500/20 text-emerald-800 font-semibold border border-emerald-500/30'
+                : 'bg-muted/60 hover:bg-muted text-foreground/70'
+            }`}
+          >
+            Confirmed Slots ({bookings.filter((b) => b.status === 'confirmed').length})
+          </button>
+        </div>
+
+        <button
+          onClick={handleOpenNew}
+          className="px-2.5 py-1 rounded-lg border border-border/80 text-foreground/70 hover:text-foreground text-[11px] font-medium hover:bg-card transition-colors flex items-center gap-1"
+        >
+          <PlusCircle className="w-3 h-3 text-gold" />
+          <span>Walk-In Booking</span>
+        </button>
+      </div>
+
       {/* Tabs & Search Filter Controls */}
       <div className="space-y-3">
         {/* Status Tabs */}

@@ -16,13 +16,25 @@ import {
   Menu,
   X,
   PlusCircle,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
 import { SignOutButton } from '@/components/sign-out-button'
 import { useAdminStore } from './admin-store-provider'
 
 export function AdminSidebar() {
   const pathname = usePathname()
-  const { categories, sessions, clients, bookings, resetToDefaults } = useAdminStore()
+  const {
+    categories,
+    sessions,
+    clients,
+    bookings,
+    resetToDefaults,
+    isSidebarCollapsed,
+    toggleSidebar,
+  } = useAdminStore()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const navItems = [
@@ -56,26 +68,114 @@ export function AdminSidebar() {
     },
   ]
 
-  const SidebarContent = (
+  // Collapsed desktop view
+  const CollapsedContent = (
+    <div className="flex flex-col justify-between h-full items-center py-5">
+      <div className="space-y-6 flex flex-col items-center w-full">
+        {/* Brand Icon */}
+        <Link href="/" className="p-2 rounded-xl hover:bg-muted/40 transition-colors group" title="Auralixa Home">
+          <Sparkles className="w-6 h-6 text-gold group-hover:scale-110 transition-transform" />
+        </Link>
+
+        {/* Toggle Expand Button */}
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-lg border border-border/80 text-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors"
+          title="Expand sidebar"
+        >
+          <PanelLeftOpen className="w-4 h-4 text-gold" />
+        </button>
+
+        {/* Nav Items */}
+        <nav className="space-y-2 w-full px-2">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative flex items-center justify-center p-3 rounded-xl transition-all group ${
+                  item.active
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-foreground/70 hover:text-foreground hover:bg-muted/60'
+                }`}
+                title={item.name}
+              >
+                <Icon
+                  className={`w-5 h-5 transition-colors ${
+                    item.active ? 'text-gold' : 'text-foreground/60 group-hover:text-gold'
+                  }`}
+                />
+                {item.badge && item.badge !== '0' && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gold ring-2 ring-card" />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+
+      {/* Footer Controls */}
+      <div className="flex flex-col items-center space-y-3 w-full px-2 border-t border-border/60 pt-4">
+        <button
+          onClick={() => {
+            if (confirm('Reset all mockup data?')) resetToDefaults()
+          }}
+          className="p-2 text-foreground/50 hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors"
+          title="Reset Mock Data"
+        >
+          <RotateCcw className="w-4 h-4 text-gold" />
+        </button>
+        <Link
+          href="/profile"
+          className="p-2 text-foreground/70 hover:text-foreground transition-colors"
+          title="Profile Settings"
+        >
+          <User className="w-4 h-4 text-gold" />
+        </Link>
+        <Link
+          href="/dashboard"
+          className="p-2 text-foreground/60 hover:text-foreground transition-colors"
+          title="Switch to Client View"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
+      </div>
+    </div>
+  )
+
+  // Expanded desktop view & mobile drawer
+  const ExpandedContent = (
     <div className="flex flex-col justify-between h-full">
       <div className="space-y-6">
-        {/* Brand Header */}
+        {/* Brand Header with Collapse Toggle */}
         <div className="flex items-center justify-between pb-4 border-b border-border/60">
           <Link
             href="/"
             onClick={() => setMobileOpen(false)}
             className="flex items-center gap-2 group"
           >
-            <Sparkles className="w-5 h-5 text-gold group-hover:scale-110 transition-transform" />
+            <Sparkles className="w-5 h-5 text-gold group-hover:scale-110 transition-transform shrink-0" />
             <div>
-              <span className="font-serif text-lg tracking-widest uppercase font-medium block text-foreground">
+              <span className="font-serif text-lg tracking-widest uppercase font-medium block text-foreground leading-tight">
                 Auralixa
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-gold font-semibold block">
+              <span className="text-[10px] uppercase tracking-widest text-gold font-semibold block leading-none mt-0.5">
                 Executive Admin
               </span>
             </div>
           </Link>
+
+          {/* Desktop collapse button */}
+          <button
+            onClick={toggleSidebar}
+            className="hidden md:flex p-1.5 text-foreground/50 hover:text-foreground rounded-lg hover:bg-muted/40 transition-colors"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4 text-gold" />
+          </button>
+
+          {/* Mobile close button */}
           <button
             onClick={() => setMobileOpen(false)}
             className="md:hidden p-1 text-foreground/60 hover:text-foreground"
@@ -176,7 +276,7 @@ export function AdminSidebar() {
         {/* Mock Data Reset */}
         <button
           onClick={() => {
-            if (confirm('Reset all admin mockup data (sessions, categories, bookings, clients) to defaults?')) {
+            if (confirm('Reset all admin mockup data to factory defaults?')) {
               resetToDefaults()
             }
           }}
@@ -188,7 +288,7 @@ export function AdminSidebar() {
             <span>Reset Mock Data</span>
           </span>
           <span className="text-[10px] bg-amber-500/10 text-amber-700 px-1.5 py-0.5 rounded border border-amber-500/20">
-            Mock Mode
+            Mock
           </span>
         </button>
 
@@ -221,9 +321,13 @@ export function AdminSidebar() {
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-card border-r border-border/80 p-5 flex-col justify-between shrink-0 h-screen sticky top-0 overflow-y-auto">
-        {SidebarContent}
+      {/* Desktop Sidebar (Collapsible: w-20 or w-64) */}
+      <aside
+        className={`hidden md:flex bg-card border-r border-border/80 shrink-0 h-screen sticky top-0 overflow-y-auto transition-all duration-300 ${
+          isSidebarCollapsed ? 'w-20 px-2' : 'w-64 p-5'
+        }`}
+      >
+        {isSidebarCollapsed ? CollapsedContent : ExpandedContent}
       </aside>
 
       {/* Mobile Top Bar */}
@@ -251,7 +355,7 @@ export function AdminSidebar() {
             onClick={() => setMobileOpen(false)}
           />
           <div className="relative w-72 max-w-full bg-card p-5 h-full z-10 shadow-2xl flex flex-col justify-between overflow-y-auto">
-            {SidebarContent}
+            {ExpandedContent}
           </div>
         </div>
       )}

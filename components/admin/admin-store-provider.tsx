@@ -12,12 +12,67 @@ import {
   INITIAL_BOOKINGS,
 } from '@/lib/admin-mock-data'
 
+export interface NotificationItem {
+  id: string
+  title: string
+  message: string
+  timestamp: string
+  type: 'booking' | 'payment' | 'client' | 'system'
+  isRead: boolean
+}
+
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'notif-1',
+    title: 'New Appointment Scheduled',
+    message: 'Sophia Laurent booked Nano-Peptide Lift & Sculpt for Sep 14, 14:00.',
+    timestamp: '12 mins ago',
+    type: 'booking',
+    isRead: false,
+  },
+  {
+    id: 'notif-2',
+    title: 'In-Person Payment Settled',
+    message: '£195.00 settled via Chip & PIN Terminal for Charlotte Hughes (AUR-65231).',
+    timestamp: '45 mins ago',
+    type: 'payment',
+    isRead: false,
+  },
+  {
+    id: 'notif-3',
+    title: 'Clinical Intake Alert',
+    message: 'Eleanor Vance profile updated with active allergy flags: Penicillin, Topical Retinoids.',
+    timestamp: '2 hours ago',
+    type: 'client',
+    isRead: false,
+  },
+  {
+    id: 'notif-4',
+    title: 'Appointment Completed',
+    message: 'Dr. Alexander Sterling completed Clinical Diamond Microdermabrasion.',
+    timestamp: 'Yesterday',
+    type: 'booking',
+    isRead: true,
+  },
+]
+
 interface AdminStoreContextType {
   categories: MockCategory[]
   sessions: MockSession[]
   clients: MockClient[]
   bookings: MockBooking[]
   isHydrated: boolean
+
+  // Sidebar collapsible
+  isSidebarCollapsed: boolean
+  toggleSidebar: () => void
+
+  // Notification Center
+  notifications: NotificationItem[]
+  unreadCount: number
+  addNotification: (notif: Omit<NotificationItem, 'id' | 'isRead' | 'timestamp'>) => void
+  markAllNotificationsRead: () => void
+  clearNotifications: () => void
 
   // Categories CRUD
   addCategory: (category: Omit<MockCategory, 'id'>) => MockCategory
@@ -53,6 +108,8 @@ const STORAGE_KEYS = {
   SESSIONS: 'auralixa_admin_mock_sessions_v1',
   CLIENTS: 'auralixa_admin_mock_clients_v1',
   BOOKINGS: 'auralixa_admin_mock_bookings_v1',
+  NOTIFICATIONS: 'auralixa_admin_mock_notifications_v1',
+  SIDEBAR_COLLAPSED: 'auralixa_admin_sidebar_collapsed_v1',
 }
 
 export function AdminStoreProvider({ children }: { children: React.ReactNode }) {
@@ -60,6 +117,8 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
   const [sessions, setSessions] = useState<MockSession[]>(INITIAL_SESSIONS)
   const [clients, setClients] = useState<MockClient[]>(INITIAL_CLIENTS)
   const [bookings, setBookings] = useState<MockBooking[]>(INITIAL_BOOKINGS)
+  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
 
@@ -70,17 +129,34 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
       const savedSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS)
       const savedClients = localStorage.getItem(STORAGE_KEYS.CLIENTS)
       const savedBookings = localStorage.getItem(STORAGE_KEYS.BOOKINGS)
+      const savedNotifs = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)
+      const savedSidebar = localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED)
 
       if (savedCats) setCategories(JSON.parse(savedCats))
       if (savedSessions) setSessions(JSON.parse(savedSessions))
       if (savedClients) setClients(JSON.parse(savedClients))
       if (savedBookings) setBookings(JSON.parse(savedBookings))
+      if (savedNotifs) setNotifications(JSON.parse(savedNotifs))
+      if (savedSidebar !== null) setIsSidebarCollapsed(JSON.parse(savedSidebar))
     } catch (e) {
       console.warn('Failed to hydrate admin store from localStorage, using defaults:', e)
     } finally {
       setIsHydrated(true)
     }
   }, [])
+
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, JSON.stringify(next))
+      } catch (e) {
+        console.error(e)
+      }
+      return next
+    })
+  }
 
   // Persist helpers
   const persistCategories = (newCats: MockCategory[]) => {
@@ -119,12 +195,44 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
+  const persistNotifications = (newNotifs: NotificationItem[]) => {
+    setNotifications(newNotifs)
+    try {
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(newNotifs))
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const showNotification = (msg: string) => {
     setNotification(msg)
     setTimeout(() => {
       setNotification((curr) => (curr === msg ? null : curr))
     }, 4000)
   }
+
+  // Notification center operations
+  const addNotification = (notif: Omit<NotificationItem, 'id' | 'isRead' | 'timestamp'>) => {
+    const newItem: NotificationItem = {
+      ...notif,
+      id: `notif-${Date.now()}`,
+      timestamp: 'Just now',
+      isRead: false,
+    }
+    const updated = [newItem, ...notifications]
+    persistNotifications(updated)
+  }
+
+  const markAllNotificationsRead = () => {
+    const updated = notifications.map((n) => ({ ...n, isRead: true }))
+    persistNotifications(updated)
+  }
+
+  const clearNotifications = () => {
+    persistNotifications([])
+  }
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   // Categories CRUD
   const addCategory = (catData: Omit<MockCategory, 'id'>): MockCategory => {
@@ -135,6 +243,11 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     const updated = [newCategory, ...categories]
     persistCategories(updated)
     showNotification(`Category "${newCategory.name}" created successfully.`)
+    addNotification({
+      title: 'New Treatment Category',
+      message: `Taxonomy category "${newCategory.name}" added to clinic offerings.`,
+      type: 'system',
+    })
     return newCategory
   }
 
@@ -160,6 +273,11 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     const updated = [newSession, ...sessions]
     persistSessions(updated)
     showNotification(`Treatment "${newSession.title}" added to catalog.`)
+    addNotification({
+      title: 'New Treatment Added',
+      message: `"${newSession.title}" added to catalog (£${newSession.pricing.toFixed(2)}).`,
+      type: 'system',
+    })
     return newSession
   }
 
@@ -191,6 +309,11 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     const updated = [newClient, ...clients]
     persistClients(updated)
     showNotification(`Client "${newClient.first_name} ${newClient.last_name}" registered.`)
+    addNotification({
+      title: 'New Patient Registered',
+      message: `${newClient.first_name} ${newClient.last_name} enrolled in clinical registry.`,
+      type: 'client',
+    })
     return newClient
   }
 
@@ -237,6 +360,11 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     }
 
     showNotification(`Booking ${randomRef} created for ${newBooking.client_name}.`)
+    addNotification({
+      title: 'Appointment Booked',
+      message: `${newBooking.client_name} booked ${newBooking.session_title} (${randomRef}).`,
+      type: 'booking',
+    })
     return newBooking
   }
 
@@ -283,6 +411,11 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     }
 
     showNotification(`Payment of £${target.total_price.toFixed(2)} recorded for ${target.booking_reference}.`)
+    addNotification({
+      title: 'In-Person Desk Settlement',
+      message: `£${target.total_price.toFixed(2)} recorded for ${target.client_name} (${paymentMethodNote}).`,
+      type: 'payment',
+    })
   }
 
   const resetToDefaults = () => {
@@ -290,10 +423,12 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     localStorage.removeItem(STORAGE_KEYS.SESSIONS)
     localStorage.removeItem(STORAGE_KEYS.CLIENTS)
     localStorage.removeItem(STORAGE_KEYS.BOOKINGS)
+    localStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS)
     setCategories(INITIAL_CATEGORIES)
     setSessions(INITIAL_SESSIONS)
     setClients(INITIAL_CLIENTS)
     setBookings(INITIAL_BOOKINGS)
+    setNotifications(INITIAL_NOTIFICATIONS)
     showNotification('All admin mockup data has been reset to defaults.')
   }
 
@@ -305,6 +440,13 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
         clients,
         bookings,
         isHydrated,
+        isSidebarCollapsed,
+        toggleSidebar,
+        notifications,
+        unreadCount,
+        addNotification,
+        markAllNotificationsRead,
+        clearNotifications,
         addCategory,
         updateCategory,
         deleteCategory,
