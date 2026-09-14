@@ -81,6 +81,22 @@ export async function seedCatalogIfEmpty() {
       buffer_minutes: 15,
       is_active: true,
     },
+    {
+      name: 'Consultations & Skin Diagnostics',
+      slug: 'consultations-diagnostics',
+      description: 'Comprehensive digital skin health analysis, allergy review, and bespoke aesthetic treatment curation.',
+      default_duration_minutes: 30,
+      buffer_minutes: 10,
+      is_active: true,
+    },
+    {
+      name: 'Bespoke Packages & Curations',
+      slug: 'bespoke-packages',
+      description: 'Multi-modality treatment sequences, bridal skin preparation, and intensive multi-week aesthetic courses.',
+      default_duration_minutes: 90,
+      buffer_minutes: 20,
+      is_active: true,
+    },
   ]
 
   const { data: seededCats, error: catError } = await supabase

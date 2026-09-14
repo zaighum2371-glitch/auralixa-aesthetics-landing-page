@@ -150,6 +150,24 @@ export const INITIAL_CATEGORIES: MockCategory[] = [
     buffer_minutes: 15,
     is_active: true,
   },
+  {
+    id: '10122140-412a-408c-b116-26f2671b958f',
+    name: 'Consultations & Skin Diagnostics',
+    slug: 'consultations-diagnostics',
+    description: 'Comprehensive digital skin health analysis, allergy review, and bespoke aesthetic treatment curation.',
+    default_duration_minutes: 30,
+    buffer_minutes: 10,
+    is_active: true,
+  },
+  {
+    id: 'b7d7a03f-c576-477c-ae66-3cca461e3e95',
+    name: 'Bespoke Packages & Curations',
+    slug: 'bespoke-packages',
+    description: 'Multi-modality treatment sequences, bridal skin preparation, and intensive multi-week aesthetic courses.',
+    default_duration_minutes: 90,
+    buffer_minutes: 20,
+    is_active: true,
+  },
 ]
 
 export const INITIAL_SESSIONS: MockSession[] = [
