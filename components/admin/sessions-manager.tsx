@@ -526,7 +526,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                     <div className="flex items-center justify-end gap-2 pt-2">
                       <button
                         onClick={() => handleOpenEditTreatment(session)}
-                        className="px-3 py-1.5 rounded-lg border border-border/80 text-xs font-medium text-foreground hover:bg-muted/50 flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 rounded-lg border border-border/80 bg-background text-xs font-medium text-foreground hover:text-gold hover:border-gold flex items-center gap-1.5 transition-colors shadow-2xs"
                       >
                         <Edit2 className="w-3 h-3 text-gold" />
                         <span>Edit</span>
@@ -539,7 +539,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                             name: session.title,
                           })
                         }
-                        className="p-1.5 rounded-lg border border-border/80 text-destructive hover:bg-destructive/10 transition-colors"
+                        className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
                         title="Archive treatment"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -629,7 +629,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleOpenEditCategory(cat)}
-                        className="px-3 py-1.5 rounded-lg border border-border/80 text-xs font-medium text-foreground hover:bg-muted/50 flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 rounded-lg border border-border/80 bg-background text-xs font-medium text-foreground hover:text-gold hover:border-gold flex items-center gap-1.5 transition-colors shadow-2xs"
                       >
                         <Edit2 className="w-3 h-3 text-gold" />
                         <span>Edit</span>
@@ -642,7 +642,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                             name: cat.name,
                           })
                         }
-                        className="p-1.5 rounded-lg border border-border/80 text-destructive hover:bg-destructive/10 transition-colors"
+                        className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
                         title="Delete category"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

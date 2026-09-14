@@ -66,6 +66,9 @@ interface AdminStoreContextType {
   // Sidebar collapsible
   isSidebarCollapsed: boolean
   toggleSidebar: () => void
+  isMobileSidebarOpen: boolean
+  setMobileSidebarOpen: (open: boolean) => void
+  toggleMobileSidebar: () => void
 
   // Notification Center
   notifications: NotificationItem[]
@@ -119,8 +122,12 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
   const [bookings, setBookings] = useState<MockBooking[]>(INITIAL_BOOKINGS)
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
+
+  // Toggle mobile sidebar
+  const toggleMobileSidebar = () => setMobileSidebarOpen((prev) => !prev)
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -442,6 +449,9 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
         isHydrated,
         isSidebarCollapsed,
         toggleSidebar,
+        isMobileSidebarOpen,
+        setMobileSidebarOpen,
+        toggleMobileSidebar,
         notifications,
         unreadCount,
         addNotification,

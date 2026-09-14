@@ -15,12 +15,24 @@ import {
   ChevronRight,
   Home,
   CheckCircle2,
+  Menu,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from 'lucide-react'
 import { useAdminStore, NotificationItem } from './admin-store-provider'
 
 export function AdminHeader() {
   const pathname = usePathname()
-  const { notifications, unreadCount, markAllNotificationsRead, clearNotifications } = useAdminStore()
+  const {
+    notifications,
+    unreadCount,
+    markAllNotificationsRead,
+    clearNotifications,
+    isSidebarCollapsed,
+    toggleSidebar,
+    isMobileSidebarOpen,
+    toggleMobileSidebar,
+  } = useAdminStore()
   const [isNotifOpen, setIsNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
 
@@ -74,9 +86,35 @@ export function AdminHeader() {
   }
 
   return (
-    <header className="h-16 border-b border-border/70 bg-card/85 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-      {/* Left: Breadcrumbs Navigation (small text) */}
-      <nav aria-label="Breadcrumbs" className="flex items-center gap-1.5 text-[11px] text-foreground/50">
+    <header className="h-16 border-b border-border/70 bg-card/85 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+      {/* Left Area: Outside Toggle Icon & Breadcrumbs Navigation */}
+      <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+        {/* Mobile Navigation Toggle (Visible on mobile outside of sidebar) */}
+        <button
+          onClick={toggleMobileSidebar}
+          className="md:hidden p-2 rounded-xl border border-border/80 bg-background/90 hover:bg-muted text-foreground hover:text-gold transition-colors flex items-center justify-center shrink-0 shadow-2xs"
+          aria-label={isMobileSidebarOpen ? "Close navigation menu" : "Open navigation menu"}
+          title={isMobileSidebarOpen ? "Close navigation menu" : "Open navigation menu"}
+        >
+          <Menu className="w-4 h-4 text-gold" />
+        </button>
+
+        {/* Desktop Sidebar Toggle (Visible on desktop outside of sidebar) */}
+        <button
+          onClick={toggleSidebar}
+          className="hidden md:flex p-1.5 rounded-lg border border-border/80 bg-background/80 hover:bg-muted text-foreground/60 hover:text-gold transition-colors items-center justify-center shrink-0 shadow-2xs"
+          aria-label={isSidebarCollapsed ? "Expand left sidebar" : "Collapse left sidebar"}
+          title={isSidebarCollapsed ? "Expand left sidebar" : "Collapse left sidebar"}
+        >
+          {isSidebarCollapsed ? (
+            <PanelLeftOpen className="w-4 h-4 text-gold" />
+          ) : (
+            <PanelLeftClose className="w-4 h-4 text-foreground/60 hover:text-gold" />
+          )}
+        </button>
+
+        {/* Breadcrumbs Navigation (small text) */}
+        <nav aria-label="Breadcrumbs" className="flex items-center gap-1.5 text-[11px] text-foreground/50 truncate">
         <Link
           href="/"
           className="hover:text-gold transition-colors flex items-center gap-1"
@@ -106,7 +144,8 @@ export function AdminHeader() {
             </React.Fragment>
           )
         })}
-      </nav>
+        </nav>
+      </div>
 
       {/* Right Controls: Notification Center + User Profile */}
       <div className="flex items-center gap-3">

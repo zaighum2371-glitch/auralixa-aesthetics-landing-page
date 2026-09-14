@@ -448,7 +448,9 @@ export function BookingsManager({
                   <th className="py-3 px-4">Date & Time</th>
                   <th className="py-3 px-4">Price & Settlement</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -498,27 +500,21 @@ export function BookingsManager({
                         {b.payment_status === 'paid_in_person' ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                             <CheckCircle2 className="w-2.5 h-2.5" />
-                            Paid Desk
+                            <span>Paid In Person</span>
                           </span>
                         ) : (
-                          <button
-                            onClick={() => {
-                              setPaymentModalBooking(b)
-                              setPaymentMethod('chip_pin')
-                            }}
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30 transition-colors"
-                          >
-                            <CreditCard className="w-2.5 h-2.5" />
-                            Settle £{b.total_price.toFixed(2)}
-                          </button>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                            <Clock className="w-2.5 h-2.5" />
+                            <span>Pending Settlement</span>
+                          </span>
                         )}
                       </div>
                     </td>
 
-                    {/* Status Badge */}
+                    {/* Status */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${
                           b.status === 'confirmed'
                             ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
                             : b.status === 'completed'
@@ -533,7 +529,7 @@ export function BookingsManager({
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap sticky right-0 bg-card/95 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
                       <div className="flex items-center justify-end gap-1.5">
                         {/* Status Quick Switch */}
                         {b.status === 'pending' && (
@@ -542,7 +538,7 @@ export function BookingsManager({
                               updateBooking(b.id, { status: 'confirmed' })
                               await serverUpdateBookingStatus(b.id, 'confirmed')
                             }}
-                            className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 text-[11px] font-medium border border-emerald-500/20"
+                            className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 text-[11px] font-medium border border-emerald-500/20 shadow-2xs"
                             title="Confirm appointment"
                           >
                             Confirm
@@ -555,7 +551,7 @@ export function BookingsManager({
                               updateBooking(b.id, { status: 'completed' })
                               await serverUpdateBookingStatus(b.id, 'completed')
                             }}
-                            className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 text-[11px] font-medium border border-blue-500/20"
+                            className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 text-[11px] font-medium border border-blue-500/20 shadow-2xs"
                             title="Mark treatment completed"
                           >
                             Complete
@@ -564,7 +560,7 @@ export function BookingsManager({
 
                         <button
                           onClick={() => setSelectedBookingDetails(b)}
-                          className="p-1.5 rounded-lg border border-border/80 text-foreground/70 hover:text-foreground hover:bg-muted/50"
+                          className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
                           title="View complete booking record"
                         >
                           <FileText className="w-3.5 h-3.5 text-gold" />
@@ -572,7 +568,7 @@ export function BookingsManager({
 
                         <button
                           onClick={() => handleOpenEdit(b)}
-                          className="p-1.5 rounded-lg border border-border/80 text-foreground/70 hover:text-foreground hover:bg-muted/50"
+                          className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
                           title="Edit appointment"
                         >
                           <Edit2 className="w-3.5 h-3.5 text-gold" />
@@ -581,7 +577,7 @@ export function BookingsManager({
                         {b.status !== 'cancelled_by_admin' && b.status !== 'cancelled_by_client' && (
                           <button
                             onClick={() => setCancellingBooking(b)}
-                            className="p-1.5 rounded-lg border border-border/80 text-destructive hover:bg-destructive/10"
+                            className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
                             title="Cancel appointment"
                           >
                             <XCircle className="w-3.5 h-3.5" />
@@ -590,7 +586,7 @@ export function BookingsManager({
 
                         <button
                           onClick={() => setDeletingBooking(b)}
-                          className="p-1.5 rounded-lg border border-border/80 text-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                          className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
                           title="Delete appointment"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

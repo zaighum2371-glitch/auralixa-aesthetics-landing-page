@@ -34,8 +34,9 @@ export function AdminSidebar() {
     resetToDefaults,
     isSidebarCollapsed,
     toggleSidebar,
+    isMobileSidebarOpen,
+    setMobileSidebarOpen,
   } = useAdminStore()
-  const [mobileOpen, setMobileOpen] = useState(false)
 
   const navItems = [
     {
@@ -152,7 +153,7 @@ export function AdminSidebar() {
         <div className="flex items-center justify-between pb-4 border-b border-border/60">
           <Link
             href="/"
-            onClick={() => setMobileOpen(false)}
+            onClick={() => setMobileSidebarOpen(false)}
             className="flex items-center gap-2 group"
           >
             <Sparkles className="w-5 h-5 text-gold group-hover:scale-110 transition-transform shrink-0" />
@@ -177,7 +178,7 @@ export function AdminSidebar() {
 
           {/* Mobile close button */}
           <button
-            onClick={() => setMobileOpen(false)}
+            onClick={() => setMobileSidebarOpen(false)}
             className="md:hidden p-1 text-foreground/60 hover:text-foreground"
             aria-label="Close menu"
           >
@@ -197,7 +198,7 @@ export function AdminSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => setMobileSidebarOpen(false)}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                     item.active
                       ? 'bg-primary text-primary-foreground shadow-sm'
@@ -237,7 +238,7 @@ export function AdminSidebar() {
           <div className="space-y-1 text-xs">
             <Link
               href="/admin/sessions?action=new-treatment"
-              onClick={() => setMobileOpen(false)}
+              onClick={() => setMobileSidebarOpen(false)}
               className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/40 transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5 text-gold" />
@@ -245,7 +246,7 @@ export function AdminSidebar() {
             </Link>
             <Link
               href="/admin/sessions?tab=categories&action=new-category"
-              onClick={() => setMobileOpen(false)}
+              onClick={() => setMobileSidebarOpen(false)}
               className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/40 transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5 text-gold" />
@@ -253,7 +254,7 @@ export function AdminSidebar() {
             </Link>
             <Link
               href="/admin/bookings?action=new"
-              onClick={() => setMobileOpen(false)}
+              onClick={() => setMobileSidebarOpen(false)}
               className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/40 transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5 text-gold" />
@@ -261,7 +262,7 @@ export function AdminSidebar() {
             </Link>
             <Link
               href="/admin/clients?action=new"
-              onClick={() => setMobileOpen(false)}
+              onClick={() => setMobileSidebarOpen(false)}
               className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/40 transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5 text-gold" />
@@ -294,7 +295,7 @@ export function AdminSidebar() {
 
         <Link
           href="/profile"
-          onClick={() => setMobileOpen(false)}
+          onClick={() => setMobileSidebarOpen(false)}
           className="flex items-center gap-2 px-3 py-1 text-xs text-foreground/70 hover:text-foreground transition-colors"
         >
           <User className="w-3.5 h-3.5 text-gold" />
@@ -302,7 +303,7 @@ export function AdminSidebar() {
         </Link>
         <Link
           href="/dashboard"
-          onClick={() => setMobileOpen(false)}
+          onClick={() => setMobileSidebarOpen(false)}
           className="flex items-center gap-2 px-3 py-1 text-xs text-foreground/60 hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -330,31 +331,15 @@ export function AdminSidebar() {
         {isSidebarCollapsed ? CollapsedContent : ExpandedContent}
       </aside>
 
-      {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border/80 sticky top-0 z-40">
-        <Link href="/" className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-gold" />
-          <span className="font-serif text-base tracking-wider uppercase font-medium">
-            Auralixa Admin
-          </span>
-        </Link>
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="p-2 rounded-lg bg-muted/50 text-foreground/80 hover:text-foreground"
-          aria-label="Open navigation"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Mobile Drawer Overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
+      {/* Mobile Drawer Navigation (Triggered by external toggle outside sidebar) */}
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-hidden="true"
           />
-          <div className="relative w-72 max-w-full bg-card p-5 h-full z-10 shadow-2xl flex flex-col justify-between overflow-y-auto">
+          <div className="relative w-72 max-w-[85vw] bg-card p-5 h-full z-10 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-left duration-200 border-r border-border">
             {ExpandedContent}
           </div>
         </div>

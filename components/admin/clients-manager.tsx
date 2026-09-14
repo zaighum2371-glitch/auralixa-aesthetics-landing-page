@@ -335,7 +335,9 @@ export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
                   <th className="py-3 px-4">Intake Contraindications</th>
                   <th className="py-3 px-4">Visits & Spend</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -421,25 +423,25 @@ export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap sticky right-0 bg-card/95 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setSelectedClient360(client)}
-                            className="p-1.5 rounded-lg border border-border/80 text-foreground/70 hover:text-foreground hover:bg-muted/50"
+                            className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
                             title="Open Client 360 View"
                           >
                             <FileText className="w-3.5 h-3.5 text-gold" />
                           </button>
                           <button
                             onClick={() => handleOpenEdit(client)}
-                            className="p-1.5 rounded-lg border border-border/80 text-foreground/70 hover:text-foreground hover:bg-muted/50"
+                            className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
                             title="Edit Client Profile"
                           >
                             <Edit2 className="w-3.5 h-3.5 text-gold" />
                           </button>
                           <button
                             onClick={() => setDeletingClient(client)}
-                            className="p-1.5 rounded-lg border border-border/80 text-destructive hover:bg-destructive/10"
+                            className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
                             title="Delete Client"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

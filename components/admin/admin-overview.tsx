@@ -21,6 +21,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   Zap,
+  ShieldCheck,
+  User,
+  FileText,
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { RoleManager } from './role-manager'
@@ -65,6 +68,21 @@ export function AdminOverview({
   const [dateRange, setDateRange] = useState<DateRange>('month')
   // Contextual Quick Action Focus
   const [contextFocus, setContextFocus] = useState<ContextualFocus>('all')
+  // User Directory Role Filter State
+  const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'admin' | 'client' | 'user'>('all')
+
+  // Role Counts for Quick Filter Pills
+  const roleCounts = {
+    all: userList.length,
+    admin: userList.filter((u) => u.role === 'admin').length,
+    client: userList.filter((u) => u.role === 'client').length,
+    user: userList.filter((u) => u.role === 'user').length,
+  }
+
+  const filteredUserList = userList.filter((u) => {
+    if (userRoleFilter === 'all') return true
+    return u.role === userRoleFilter
+  })
 
   // Dynamic metrics from mock store
   const totalSessions = sessions.length
@@ -739,9 +757,62 @@ export function AdminOverview({
               Live records from the Supabase <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">public.profiles</code> table. You can modify any user&apos;s role below to test role switching.
             </p>
           </div>
-          <span className="text-xs font-medium text-foreground/50 self-start sm:self-auto">
-            {userList.length} Registered Live Profiles
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="text-xs font-medium text-foreground/50">
+              {filteredUserList.length} of {userList.length} Profiles
+            </span>
+          </div>
+        </div>
+
+        {/* Quick Role Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
+          <span className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mr-1 flex items-center gap-1">
+            <Filter className="w-3 h-3 text-gold" />
+            <span>Role Filter:</span>
           </span>
+          <button
+            onClick={() => setUserRoleFilter('all')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+              userRoleFilter === 'all'
+                ? 'bg-primary text-primary-foreground shadow-xs font-semibold'
+                : 'bg-muted/50 hover:bg-muted text-foreground/70'
+            }`}
+          >
+            All Roles ({roleCounts.all})
+          </button>
+          <button
+            onClick={() => setUserRoleFilter('admin')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+              userRoleFilter === 'admin'
+                ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                : 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 border border-purple-500/20'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Admins ({roleCounts.admin})</span>
+          </button>
+          <button
+            onClick={() => setUserRoleFilter('client')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+              userRoleFilter === 'client'
+                ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 border border-emerald-500/20'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Clients ({roleCounts.client})</span>
+          </button>
+          <button
+            onClick={() => setUserRoleFilter('user')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+              userRoleFilter === 'user'
+                ? 'bg-amber-600 text-white shadow-xs font-semibold'
+                : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 border border-amber-500/20'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Members ({roleCounts.user})</span>
+          </button>
         </div>
 
         {userList.length === 0 ? (
@@ -750,6 +821,19 @@ export function AdminOverview({
             <p className="text-sm text-foreground/70">
               No profiles found in the database yet.
             </p>
+          </div>
+        ) : filteredUserList.length === 0 ? (
+          <div className="text-center py-10 space-y-3 bg-muted/20 rounded-xl border border-dashed border-border/80">
+            <ShieldAlert className="w-7 h-7 text-foreground/30 mx-auto" />
+            <p className="text-sm text-foreground/70">
+              No profiles match the role filter &ldquo;{userRoleFilter}&rdquo;.
+            </p>
+            <button
+              onClick={() => setUserRoleFilter('all')}
+              className="px-3.5 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-gold hover:text-foreground transition-colors shadow-2xs"
+            >
+              Clear Role Filter
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -760,11 +844,11 @@ export function AdminOverview({
                   <th className="py-3 px-3">Email</th>
                   <th className="py-3 px-3">Current Role</th>
                   <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3 text-right">Role Action</th>
+                  <th className="py-3 px-3 text-right sticky right-0 bg-card z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">Action & Role</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {userList.map((userProfile) => {
+                {filteredUserList.map((userProfile) => {
                   const initials = [userProfile.first_name?.[0], userProfile.last_name?.[0]]
                     .filter(Boolean)
                     .join('')
@@ -820,12 +904,21 @@ export function AdminOverview({
                           {userProfile.status || 'active'}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-right">
-                        <RoleManager
-                          userId={userProfile.id}
-                          currentRole={userProfile.role}
-                          onUpdateRole={updateUserRole}
-                        />
+                      <td className="py-3 px-3 text-right sticky right-0 bg-card/95 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)] whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <RoleManager
+                            userId={userProfile.id}
+                            currentRole={userProfile.role}
+                            onUpdateRole={updateUserRole}
+                          />
+                          <Link
+                            href={`/admin/clients?q=${encodeURIComponent(userProfile.email || '')}`}
+                            className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground/70 hover:text-gold hover:border-gold transition-colors inline-flex items-center justify-center shadow-2xs"
+                            title="View in Client Directory"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-gold" />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   )
