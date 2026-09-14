@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Users,
@@ -24,13 +24,32 @@ import {
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { MockClient } from '@/lib/admin-mock-data'
+import {
+  updateClientProfile,
+  updateClientStatus,
+  createClientRecord,
+  deleteClientRecord,
+} from '@/actions/admin-clients'
 
-export function ClientsManager() {
+interface ClientsManagerProps {
+  initialClients?: MockClient[]
+}
+
+export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const autoAction = searchParams.get('action')
 
-  const { clients, bookings, addClient, updateClient, deleteClient } = useAdminStore()
+  const { clients: storeClients, bookings, addClient, updateClient, deleteClient } = useAdminStore()
+  const [clients, setClients] = useState<MockClient[]>(
+    initialClients && initialClients.length > 0 ? initialClients : storeClients
+  )
+
+  useEffect(() => {
+    if (initialClients && initialClients.length > 0) {
+      setClients(initialClients)
+    }
+  }, [initialClients])
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('')
@@ -126,7 +145,7 @@ export function ClientsManager() {
   }
 
   // Save Client Form
-  const handleSaveClient = (e: React.FormEvent) => {
+  const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const payload = {
@@ -150,24 +169,43 @@ export function ClientsManager() {
 
     if (editingClient) {
       updateClient(editingClient.id, payload)
+      setClients((prev) =>
+        prev.map((c) => (c.id === editingClient.id ? { ...c, ...payload } : c))
+      )
       if (selectedClient360?.id === editingClient.id) {
         setSelectedClient360({ ...selectedClient360, ...payload })
       }
+      setIsNewClientOpen(false)
+      await updateClientProfile(editingClient.id, payload)
     } else {
       addClient(payload)
+      setIsNewClientOpen(false)
+      const res = await createClientRecord(payload)
+      if (res.success && res.data) {
+        const createdMock: MockClient = {
+          ...payload,
+          id: res.data.id,
+          total_bookings: 0,
+          total_spend: 0,
+          last_visit: 'Never',
+          created_at: res.data.created_at || new Date().toISOString(),
+        }
+        setClients((prev) => [createdMock, ...prev])
+      }
     }
-
-    setIsNewClientOpen(false)
   }
 
   // Confirm Delete
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingClient) return
-    deleteClient(deletingClient.id)
-    if (selectedClient360?.id === deletingClient.id) {
+    const idToDelete = deletingClient.id
+    deleteClient(idToDelete)
+    setClients((prev) => prev.filter((c) => c.id !== idToDelete))
+    if (selectedClient360?.id === idToDelete) {
       setSelectedClient360(null)
     }
     setDeletingClient(null)
+    await deleteClientRecord(idToDelete)
   }
 
   return (
@@ -790,20 +828,58 @@ export function ClientsManager() {
             </div>
 
             {/* Actions Footer */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/60">
-              <button
-                onClick={() => handleOpenEdit(selectedClient360)}
-                className="px-4 py-2 rounded-xl border border-border/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center gap-1.5"
-              >
-                <Edit2 className="w-3.5 h-3.5 text-gold" />
-                <span>Edit Profile</span>
-              </button>
-              <button
-                onClick={() => setSelectedClient360(null)}
-                className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold"
-              >
-                Done
-              </button>
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/60">
+              <div>
+                {selectedClient360.status === 'active' ? (
+                  <button
+                    onClick={async () => {
+                      const newStatus = 'suspended'
+                      updateClient(selectedClient360.id, { status: newStatus })
+                      setClients((prev) =>
+                        prev.map((c) => (c.id === selectedClient360.id ? { ...c, status: newStatus } : c))
+                      )
+                      setSelectedClient360({ ...selectedClient360, status: newStatus })
+                      await updateClientStatus(selectedClient360.id, newStatus, 'Moderated via Client 360 drawer')
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-amber-500/40 text-amber-800 hover:bg-amber-500/10 text-xs font-medium flex items-center gap-1"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Suspend Account</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      const newStatus = 'active'
+                      updateClient(selectedClient360.id, { status: newStatus })
+                      setClients((prev) =>
+                        prev.map((c) => (c.id === selectedClient360.id ? { ...c, status: newStatus } : c))
+                      )
+                      setSelectedClient360({ ...selectedClient360, status: newStatus })
+                      await updateClientStatus(selectedClient360.id, newStatus, 'Re-activated via Client 360 drawer')
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-emerald-500/40 text-emerald-800 hover:bg-emerald-500/10 text-xs font-medium flex items-center gap-1"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Re-activate Account</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleOpenEdit(selectedClient360)}
+                  className="px-4 py-2 rounded-xl border border-border/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center gap-1.5"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-gold" />
+                  <span>Edit Profile</span>
+                </button>
+                <button
+                  onClick={() => setSelectedClient360(null)}
+                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold"
+                >
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         </div>

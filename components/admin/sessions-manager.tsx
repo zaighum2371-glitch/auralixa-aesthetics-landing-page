@@ -21,15 +21,42 @@ import {
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { MockSession, MockCategory } from '@/lib/admin-mock-data'
+import {
+  createSession,
+  updateSession as serverUpdateSession,
+  archiveSession,
+  deleteSession as serverDeleteSession,
+  createSessionCategory,
+  updateSessionCategory,
+  deleteSessionCategory,
+} from '@/actions/admin-sessions'
 
-export function SessionsManager() {
+interface SessionsManagerProps {
+  initialCategories?: any[]
+  initialSessions?: any[]
+}
+
+export function SessionsManager({ initialCategories, initialSessions }: SessionsManagerProps = {}) {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') === 'categories' ? 'categories' : 'treatments'
   const autoAction = searchParams.get('action')
 
   const [activeTab, setActiveTab] = useState<'treatments' | 'categories'>(initialTab)
-  const { categories, sessions, addCategory, updateCategory, deleteCategory, addSession, updateSession, deleteSession } =
-    useAdminStore()
+  const {
+    categories: storeCategories,
+    sessions: storeSessions,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    addSession,
+    updateSession,
+    deleteSession,
+    showNotification,
+  } = useAdminStore()
+
+  // Prefer live Supabase data if passed, otherwise fallback to store
+  const categories = initialCategories && initialCategories.length > 0 ? initialCategories : storeCategories
+  const sessions = initialSessions && initialSessions.length > 0 ? initialSessions : storeSessions
 
   // Search & Filter States
   const [treatmentSearch, setTreatmentSearch] = useState('')
@@ -78,7 +105,7 @@ export function SessionsManager() {
       const matchesSearch =
         s.title.toLowerCase().includes(treatmentSearch.toLowerCase()) ||
         s.description.toLowerCase().includes(treatmentSearch.toLowerCase()) ||
-        s.benefits.some((b) => b.toLowerCase().includes(treatmentSearch.toLowerCase()))
+        s.benefits.some((b: string) => b.toLowerCase().includes(treatmentSearch.toLowerCase()))
 
       const matchesCat = categoryFilter === 'all' || s.session_type_id === categoryFilter || s.category_name === categoryFilter
       const matchesStatus = statusFilter === 'all' || s.status === statusFilter
@@ -126,7 +153,7 @@ export function SessionsManager() {
   }
 
   // Save Treatment
-  const handleSaveTreatment = (e: React.FormEvent) => {
+  const handleSaveTreatment = async (e: React.FormEvent) => {
     e.preventDefault()
     const selectedCat = categories.find((c) => c.id === treatmentForm.session_type_id)
     const categoryName = selectedCat ? selectedCat.name : 'General Aesthetics'
@@ -155,8 +182,34 @@ export function SessionsManager() {
 
     if (editingSession) {
       updateSession(editingSession.id, payload)
+      // Call Supabase Server Action
+      await serverUpdateSession(editingSession.id, {
+        title: payload.title,
+        slug: payload.slug,
+        session_type_id: payload.session_type_id,
+        pricing: payload.pricing,
+        duration_minutes: payload.duration_minutes,
+        max_slots: payload.max_slots,
+        location: payload.location,
+        status: payload.status,
+        description: payload.description,
+        benefits: payload.benefits,
+      })
     } else {
       addSession(payload)
+      // Call Supabase Server Action
+      await createSession({
+        title: payload.title,
+        slug: payload.slug,
+        session_type_id: payload.session_type_id,
+        pricing: payload.pricing,
+        duration_minutes: payload.duration_minutes,
+        max_slots: payload.max_slots,
+        location: payload.location,
+        status: payload.status,
+        description: payload.description,
+        benefits: payload.benefits,
+      })
     }
 
     setIsTreatmentModalOpen(false)
@@ -191,7 +244,7 @@ export function SessionsManager() {
   }
 
   // Save Category
-  const handleSaveCategory = (e: React.FormEvent) => {
+  const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault()
     const payload = {
       name: categoryForm.name,
@@ -204,20 +257,26 @@ export function SessionsManager() {
 
     if (editingCategory) {
       updateCategory(editingCategory.id, payload)
+      // Call Supabase Server Action
+      await updateSessionCategory(editingCategory.id, payload)
     } else {
       addCategory(payload)
+      // Call Supabase Server Action
+      await createSessionCategory(payload)
     }
 
     setIsCategoryModalOpen(false)
   }
 
   // Confirm Delete
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingItem) return
     if (deletingItem.type === 'session') {
       deleteSession(deletingItem.id)
+      await serverDeleteSession(deletingItem.id)
     } else {
       deleteCategory(deletingItem.id)
+      await deleteSessionCategory(deletingItem.id)
     }
     setDeletingItem(null)
   }
@@ -423,7 +482,7 @@ export function SessionsManager() {
                     {/* Benefits Tags */}
                     {session.benefits && session.benefits.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
-                        {session.benefits.slice(0, 3).map((benefit, idx) => (
+                        {session.benefits.slice(0, 3).map((benefit: string, idx: number) => (
                           <span
                             key={idx}
                             className="text-[10px] bg-muted/60 text-foreground/70 px-2 py-0.5 rounded-md border border-border/50"

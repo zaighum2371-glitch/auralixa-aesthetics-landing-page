@@ -404,6 +404,27 @@ app/
     - [x] Register New Client and Edit Client modals with full medical intake fields.
   - [x] **Mock Store Persistence (`components/admin/admin-store-provider.tsx`):**
     - [x] Full client-side React Context store with `localStorage` persistence and event-driven notification dispatching.
+- [x] **Live Supabase Data Management & CRUD Operations (Finished & Verified):**
+  - [x] **Treatments & Categories Database CRUD (`actions/admin-sessions.ts`):**
+    - [x] Full CRUD operations for `session_types` (Categories) and `sessions` (Treatments) with real PostgreSQL queries and mutations.
+    - [x] Automatic audit logging in `public.session_history` capturing old vs. new values and user tracking.
+    - [x] Integrated server-side rendering into `app/(admin)/admin/sessions/page.tsx` and reactive local state synchronization in `components/admin/sessions-manager.tsx`.
+  - [x] **Bookings & Front-Desk Settlement CRUD (`actions/admin-bookings.ts`):**
+    - [x] Complete booking lifecycle management: creation, updating, deletion, and status transitions (`pending`, `confirmed`, `completed`, `cancelled_by_admin`).
+    - [x] Front-Desk In-Person payment settlement (`pending_in_person` ➔ `paid_in_person`) with payment method annotations (`Chip & PIN Terminal`, `Cash Settlement`, `Gift Voucher`).
+    - [x] Automated audit logging in `public.booking_history` for all status and payment transitions.
+    - [x] Server-side data fetching in `app/(admin)/admin/bookings/page.tsx` passing live appointments, clients, and session protocols.
+  - [x] **Clients Directory & Clinical Intake CRM (`actions/admin-clients.ts`):**
+    - [x] Aggregated client metrics computed dynamically (`total_bookings`, `total_spend` from settled desk payments, `last_visit`, and full appointment ledger).
+    - [x] Client profile management (personal info, residential address, emergency contacts, medical allergies).
+    - [x] Disciplinary status moderation (`active`, `suspended`, `banned`) with audit logging in `public.user_status_history`.
+    - [x] Service role admin client (`lib/supabase/admin.ts`) powering secure user provisioning (`createClientRecord`) and relational-safe deletions.
+  - [x] **Executive Dashboard Live Aggregations (`app/(admin)/admin/page.tsx`):**
+    - [x] Concurrently queries live categories, sessions, bookings, and clients to populate overview metrics, trend indicators, and upcoming agenda.
+    - [x] Instant front-desk settlement directly from the overview agenda with server action dispatch.
+  - [x] **Database Seeding & Validation:**
+    - [x] Database seed catalog (`actions/seed-catalog.ts`) populated with 5 categories, 7 flagship treatments, and active bookings.
+    - [x] TypeScript validation (`pnpm exec tsc --noEmit`) and Next.js production build (`pnpm build`) passing with zero errors.
 
 ### Phase 3: Brand UI System, Top-Left Toast & Shared Shells
 * Integrate `Sonner` toaster configured specifically to `position="top-left"` with custom styling matching `#F5F1EA`, `#533C2E`, and `#B2967D`.

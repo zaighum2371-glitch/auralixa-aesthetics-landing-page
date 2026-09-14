@@ -24,18 +24,42 @@ import {
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { RoleManager } from './role-manager'
+import { MockCategory, MockSession, MockClient, MockBooking } from '@/lib/admin-mock-data'
+import { settleInPersonPayment } from '@/actions/admin-bookings'
 
 interface AdminOverviewProps {
   userList: any[]
   signedUrlMap: Record<string, string>
   updateUserRole: (userId: string, newRole: 'user' | 'client' | 'admin') => Promise<void>
+  liveData?: {
+    categories?: MockCategory[]
+    sessions?: MockSession[]
+    clients?: MockClient[]
+    bookings?: MockBooking[]
+  }
 }
 
 type DateRange = 'today' | '7d' | 'month' | 'quarter'
 type ContextualFocus = 'all' | 'unsettled' | 'today_agenda' | 'intake_alerts'
 
-export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminOverviewProps) {
-  const { categories, sessions, clients, bookings, recordDeskPayment } = useAdminStore()
+export function AdminOverview({
+  userList,
+  signedUrlMap,
+  updateUserRole,
+  liveData,
+}: AdminOverviewProps) {
+  const {
+    categories: storeCategories,
+    sessions: storeSessions,
+    clients: storeClients,
+    bookings: storeBookings,
+    recordDeskPayment,
+  } = useAdminStore()
+
+  const categories = liveData?.categories && liveData.categories.length > 0 ? liveData.categories : storeCategories
+  const sessions = liveData?.sessions && liveData.sessions.length > 0 ? liveData.sessions : storeSessions
+  const clients = liveData?.clients && liveData.clients.length > 0 ? liveData.clients : storeClients
+  const bookings = liveData?.bookings && liveData.bookings.length > 0 ? liveData.bookings : storeBookings
 
   // Date Range Filter State
   const [dateRange, setDateRange] = useState<DateRange>('month')
@@ -563,7 +587,10 @@ export function AdminOverview({ userList, signedUrlMap, updateUserRole }: AdminO
                   <div className="flex items-center gap-2 self-end sm:self-center">
                     {b.payment_status === 'pending_in_person' && (
                       <button
-                        onClick={() => recordDeskPayment(b.id, 'Chip & PIN Terminal - Front Desk')}
+                        onClick={async () => {
+                          recordDeskPayment(b.id, 'Chip & PIN Terminal - Front Desk')
+                          await settleInPersonPayment(b.id, 'Chip & PIN Terminal - Front Desk')
+                        }}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1 rounded-lg border border-amber-500/30 transition-colors"
                         title="One-click settle dues"
                       >

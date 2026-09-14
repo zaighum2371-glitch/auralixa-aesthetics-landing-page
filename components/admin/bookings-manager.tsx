@@ -27,14 +27,42 @@ import {
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { MockBooking } from '@/lib/admin-mock-data'
+import {
+  createAdminBooking,
+  updateBookingStatus as serverUpdateBookingStatus,
+  settleInPersonPayment as serverSettleInPersonPayment,
+  updateBookingDetails as serverUpdateBookingDetails,
+  deleteBooking as serverDeleteBooking,
+} from '@/actions/admin-bookings'
 
-export function BookingsManager() {
+interface BookingsManagerProps {
+  initialBookings?: any[]
+  liveClients?: any[]
+  liveSessions?: any[]
+}
+
+export function BookingsManager({
+  initialBookings,
+  liveClients,
+  liveSessions,
+}: BookingsManagerProps = {}) {
   const searchParams = useSearchParams()
   const initialFilter = searchParams.get('filter')
   const initialAction = searchParams.get('action')
 
-  const { bookings, clients, sessions, addBooking, updateBooking, deleteBooking, recordDeskPayment } =
-    useAdminStore()
+  const {
+    bookings: storeBookings,
+    clients: storeClients,
+    sessions: storeSessions,
+    addBooking,
+    updateBooking,
+    deleteBooking,
+    recordDeskPayment,
+  } = useAdminStore()
+
+  const bookings = initialBookings && initialBookings.length > 0 ? initialBookings : storeBookings
+  const clients = liveClients && liveClients.length > 0 ? liveClients : storeClients
+  const sessions = liveSessions && liveSessions.length > 0 ? liveSessions : storeSessions
 
   // Tab / Filter state
   const [statusTab, setStatusTab] = useState<string>(
@@ -54,6 +82,17 @@ export function BookingsManager() {
   const [paymentNote, setPaymentNote] = useState('Chip & PIN Terminal - Front Desk')
   const [cancellingBooking, setCancellingBooking] = useState<MockBooking | null>(null)
   const [cancelReason, setCancelReason] = useState('Client requested rescheduling')
+  const [deletingBooking, setDeletingBooking] = useState<MockBooking | null>(null)
+
+  const handleConfirmDelete = async () => {
+    if (!deletingBooking) return
+    deleteBooking(deletingBooking.id)
+    await serverDeleteBooking(deletingBooking.id)
+    if (selectedBookingDetails?.id === deletingBooking.id) {
+      setSelectedBookingDetails(null)
+    }
+    setDeletingBooking(null)
+  }
 
   // New Booking Form State
   const [bookingForm, setBookingForm] = useState({
@@ -129,7 +168,7 @@ export function BookingsManager() {
   }
 
   // Save Booking (Create or Edit)
-  const handleSaveBooking = (e: React.FormEvent) => {
+  const handleSaveBooking = async (e: React.FormEvent) => {
     e.preventDefault()
     const selectedClient = clients.find((c) => c.id === bookingForm.client_id)
     const selectedSession = sessions.find((s) => s.id === bookingForm.session_id)
@@ -167,15 +206,37 @@ export function BookingsManager() {
 
     if (editingBooking) {
       updateBooking(editingBooking.id, payload)
+      // Call Supabase Server Action
+      await serverUpdateBookingDetails(editingBooking.id, {
+        appointment_date: payload.appointment_date,
+        start_time: payload.start_time,
+        end_time: payload.end_time,
+        total_price: payload.total_price,
+        client_notes: payload.client_notes,
+        admin_notes: payload.admin_notes,
+      })
     } else {
       addBooking(payload)
+      // Call Supabase Server Action
+      await createAdminBooking({
+        client_id: payload.client_id,
+        session_id: payload.session_id,
+        appointment_date: payload.appointment_date,
+        start_time: payload.start_time,
+        end_time: payload.end_time,
+        total_price: payload.total_price,
+        status: payload.status,
+        payment_status: payload.payment_status,
+        client_notes: payload.client_notes || undefined,
+        admin_notes: payload.admin_notes || undefined,
+      })
     }
 
     setIsNewBookingOpen(false)
   }
 
   // Desk Payment Settlement
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     if (!paymentModalBooking) return
     const methodNote =
       paymentMethod === 'chip_pin'
@@ -185,16 +246,20 @@ export function BookingsManager() {
         : 'Harley St Gift Voucher / Account Credit'
 
     recordDeskPayment(paymentModalBooking.id, methodNote)
+    // Call Supabase Server Action
+    await serverSettleInPersonPayment(paymentModalBooking.id, methodNote)
     setPaymentModalBooking(null)
   }
 
   // Cancel Booking
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (!cancellingBooking) return
     updateBooking(cancellingBooking.id, {
       status: 'cancelled_by_admin',
       cancel_reason: cancelReason,
     })
+    // Call Supabase Server Action
+    await serverUpdateBookingStatus(cancellingBooking.id, 'cancelled_by_admin', cancelReason)
     setCancellingBooking(null)
   }
 
@@ -473,7 +538,10 @@ export function BookingsManager() {
                         {/* Status Quick Switch */}
                         {b.status === 'pending' && (
                           <button
-                            onClick={() => updateBooking(b.id, { status: 'confirmed' })}
+                            onClick={async () => {
+                              updateBooking(b.id, { status: 'confirmed' })
+                              await serverUpdateBookingStatus(b.id, 'confirmed')
+                            }}
                             className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 text-[11px] font-medium border border-emerald-500/20"
                             title="Confirm appointment"
                           >
@@ -483,7 +551,10 @@ export function BookingsManager() {
 
                         {b.status === 'confirmed' && (
                           <button
-                            onClick={() => updateBooking(b.id, { status: 'completed' })}
+                            onClick={async () => {
+                              updateBooking(b.id, { status: 'completed' })
+                              await serverUpdateBookingStatus(b.id, 'completed')
+                            }}
                             className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 text-[11px] font-medium border border-blue-500/20"
                             title="Mark treatment completed"
                           >
@@ -516,6 +587,14 @@ export function BookingsManager() {
                             <XCircle className="w-3.5 h-3.5" />
                           </button>
                         )}
+
+                        <button
+                          onClick={() => setDeletingBooking(b)}
+                          className="p-1.5 rounded-lg border border-border/80 text-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                          title="Delete appointment"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -992,6 +1071,41 @@ export function BookingsManager() {
                 className="px-4 py-2 rounded-xl bg-destructive text-white text-xs font-semibold hover:opacity-90 shadow-xs"
               >
                 Confirm Cancellation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========================================================================= */}
+      {/* MODAL: DELETE APPOINTMENT CONFIRMATION                                    */}
+      {/* ========================================================================= */}
+      {deletingBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-card border border-border/90 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center gap-3 text-destructive">
+              <Trash2 className="w-6 h-6 shrink-0" />
+              <h3 className="font-serif text-lg font-medium text-foreground">
+                Delete Appointment
+              </h3>
+            </div>
+            <p className="text-xs text-foreground/70 leading-relaxed">
+              Are you sure you want to permanently delete booking ref{' '}
+              <strong className="font-mono text-foreground">{deletingBooking.booking_reference}</strong>?
+              This will remove the appointment from both the agenda and database.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/60">
+              <button
+                onClick={() => setDeletingBooking(null)}
+                className="px-4 py-2 rounded-xl border border-border/80 text-xs font-medium text-foreground/70 hover:text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-xl bg-destructive text-white text-xs font-semibold hover:opacity-90 shadow-xs"
+              >
+                Permanently Delete
               </button>
             </div>
           </div>
