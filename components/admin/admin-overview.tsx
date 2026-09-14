@@ -159,7 +159,7 @@ export function AdminOverview({
               Clinic Administration & Operations
             </span>
             <span className="text-foreground/40 text-xs">&bull;</span>
-            <span className="text-xs text-foreground/60 font-medium">
+            <span suppressHydrationWarning className="text-xs text-foreground/60 font-medium">
               {new Date().toLocaleDateString('en-GB', {
                 weekday: 'long',
                 day: 'numeric',

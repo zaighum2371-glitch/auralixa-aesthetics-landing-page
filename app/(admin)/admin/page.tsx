@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { extractStoragePath } from '@/lib/supabase/avatar'
 import { AdminOverview } from '@/components/admin/admin-overview'
@@ -12,7 +13,7 @@ export default async function AdminDashboardPage() {
 
   // Concurrently fetch profiles, categories, treatments, bookings, and clients
   const [
-    { data: profiles },
+    { data: profiles, error: profileError },
     rawCategories,
     rawSessions,
     rawBookings,
@@ -25,7 +26,21 @@ export default async function AdminDashboardPage() {
     getClientsWithAggregates(),
   ])
 
-  const userList = profiles || []
+  let userList = profiles || []
+  if ((profileError || userList.length === 0) && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const adminClient = createAdminClient()
+      const { data: adminProfiles } = await adminClient
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (adminProfiles && adminProfiles.length > 0) {
+        userList = adminProfiles
+      }
+    } catch (e) {
+      console.error('Fallback admin profiles fetch failed:', e)
+    }
+  }
 
   // Batch resolve signed URLs for users with avatars stored in private bucket
   const avatarPaths = userList

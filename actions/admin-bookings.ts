@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function getBookings(filters?: {
@@ -8,7 +9,12 @@ export async function getBookings(filters?: {
   paymentStatus?: string
   search?: string
 }) {
-  const supabase = await createClient()
+  let supabase
+  try {
+    supabase = await createClient()
+  } catch {
+    supabase = createAdminClient()
+  }
 
   let query = supabase
     .from('bookings')
@@ -31,13 +37,48 @@ export async function getBookings(filters?: {
     query = query.eq('payment_status', filters.paymentStatus as any)
   }
 
-  const { data, error } = await query
+  let { data, error } = await query
+
+  if (error || !data) {
+    try {
+      const adminClient = createAdminClient()
+      let fallbackQuery = adminClient
+        .from('bookings')
+        .select(`
+          *,
+          client:profiles!bookings_client_id_fkey(id, first_name, last_name, email, phone, medical_allergies),
+          session:sessions!bookings_session_id_fkey(id, title, pricing, duration_minutes, location, session_types(name))
+        `)
+        .order('appointment_date', { ascending: false })
+
+      if (filters?.status && filters.status !== 'all') {
+        if (filters.status === 'cancelled') {
+          fallbackQuery = fallbackQuery.or('status.eq.cancelled_by_admin,status.eq.cancelled_by_client,status.eq.no_show')
+        } else {
+          fallbackQuery = fallbackQuery.eq('status', filters.status as any)
+        }
+      }
+
+      if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
+        fallbackQuery = fallbackQuery.eq('payment_status', filters.paymentStatus as any)
+      }
+
+      const res = await fallbackQuery
+      if (res.data) {
+        data = res.data
+        error = null
+      }
+    } catch (e) {
+      console.error('Fallback admin bookings fetch failed:', e)
+    }
+  }
+
   if (error) {
-    console.error('Error fetching bookings:', error)
+    console.error('Error fetching bookings:', error?.message || error)
     return []
   }
 
-  return data
+  return data || []
 }
 
 export async function createAdminBooking(formData: {

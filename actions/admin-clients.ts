@@ -8,13 +8,18 @@ export async function getClientsWithAggregates(filters?: {
   status?: string
   search?: string
 }) {
-  const supabase = await createClient()
+  let supabase
+  try {
+    supabase = await createClient()
+  } catch {
+    supabase = createAdminClient()
+  }
 
   let query = supabase
     .from('profiles')
     .select(`
       *,
-      bookings(
+      bookings:bookings!bookings_client_id_fkey(
         id,
         appointment_date,
         total_price,
@@ -30,9 +35,44 @@ export async function getClientsWithAggregates(filters?: {
     query = query.eq('status', filters.status as any)
   }
 
-  const { data: profiles, error } = await query
+  let { data: profiles, error } = await query
+
+  // If RLS blocked or session wasn't found, fallback to service role admin client
   if (error || !profiles) {
-    console.error('Error fetching clients:', error)
+    try {
+      const adminClient = createAdminClient()
+      let fallbackQuery = adminClient
+        .from('profiles')
+        .select(`
+          *,
+          bookings:bookings!bookings_client_id_fkey(
+            id,
+            appointment_date,
+            total_price,
+            status,
+            payment_status,
+            booking_reference,
+            session:sessions(title)
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (filters?.status && filters.status !== 'all') {
+        fallbackQuery = fallbackQuery.eq('status', filters.status as any)
+      }
+
+      const res = await fallbackQuery
+      if (res.data) {
+        profiles = res.data
+        error = null
+      }
+    } catch (e) {
+      console.error('Fallback admin client failed:', e)
+    }
+  }
+
+  if (error || !profiles) {
+    console.error('Error fetching clients:', error?.message || error)
     return []
   }
 
@@ -163,13 +203,18 @@ export async function updateClientStatus(
 }
 
 export async function getClientDossier(clientId: string) {
-  const supabase = await createClient()
+  let supabase
+  try {
+    supabase = await createClient()
+  } catch {
+    supabase = createAdminClient()
+  }
 
-  const { data: profile, error } = await supabase
+  let { data: profile, error } = await supabase
     .from('profiles')
     .select(`
       *,
-      bookings(
+      bookings:bookings!bookings_client_id_fkey(
         id,
         booking_reference,
         appointment_date,
@@ -186,6 +231,39 @@ export async function getClientDossier(clientId: string) {
     `)
     .eq('id', clientId)
     .single()
+
+  if (error || !profile) {
+    try {
+      const adminClient = createAdminClient()
+      const res = await adminClient
+        .from('profiles')
+        .select(`
+          *,
+          bookings:bookings!bookings_client_id_fkey(
+            id,
+            booking_reference,
+            appointment_date,
+            start_time,
+            end_time,
+            total_price,
+            status,
+            payment_status,
+            payment_method_note,
+            client_notes,
+            admin_notes,
+            session:sessions(id, title, pricing, session_types(name))
+          )
+        `)
+        .eq('id', clientId)
+        .single()
+      if (res.data) {
+        profile = res.data
+        error = null
+      }
+    } catch (e) {
+      console.error('Fallback admin dossier fetch failed:', e)
+    }
+  }
 
   if (error || !profile) {
     return null

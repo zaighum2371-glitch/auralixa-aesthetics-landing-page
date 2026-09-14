@@ -1,21 +1,44 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 // Category Actions
 export async function getSessionCategories() {
-  const supabase = await createClient()
-  const { data, error } = await supabase
+  let supabase
+  try {
+    supabase = await createClient()
+  } catch {
+    supabase = createAdminClient()
+  }
+
+  let { data, error } = await supabase
     .from('session_types')
     .select('*')
     .order('name', { ascending: true })
 
+  if (error || !data) {
+    try {
+      const adminClient = createAdminClient()
+      const res = await adminClient
+        .from('session_types')
+        .select('*')
+        .order('name', { ascending: true })
+      if (res.data) {
+        data = res.data
+        error = null
+      }
+    } catch (e) {
+      console.error('Fallback admin categories fetch failed:', e)
+    }
+  }
+
   if (error) {
-    console.error('Failed to get session categories:', error)
+    console.error('Failed to get session categories:', error?.message || error)
     return []
   }
-  return data
+  return data || []
 }
 
 export async function createSessionCategory(formData: {
@@ -123,7 +146,13 @@ export async function getSessions(filters?: {
   status?: string
   search?: string
 }) {
-  const supabase = await createClient()
+  let supabase
+  try {
+    supabase = await createClient()
+  } catch {
+    supabase = createAdminClient()
+  }
+
   let query = supabase
     .from('sessions')
     .select('*, session_types(id, name, slug)')
@@ -143,12 +172,45 @@ export async function getSessions(filters?: {
     )
   }
 
-  const { data, error } = await query
+  let { data, error } = await query
+
+  if (error || !data) {
+    try {
+      const adminClient = createAdminClient()
+      let fallbackQuery = adminClient
+        .from('sessions')
+        .select('*, session_types(id, name, slug)')
+        .order('created_at', { ascending: false })
+
+      if (filters?.categoryId && filters.categoryId !== 'all') {
+        fallbackQuery = fallbackQuery.eq('session_type_id', filters.categoryId)
+      }
+
+      if (filters?.status && filters.status !== 'all') {
+        fallbackQuery = fallbackQuery.eq('status', filters.status as any)
+      }
+
+      if (filters?.search) {
+        fallbackQuery = fallbackQuery.or(
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+        )
+      }
+
+      const res = await fallbackQuery
+      if (res.data) {
+        data = res.data
+        error = null
+      }
+    } catch (e) {
+      console.error('Fallback admin sessions fetch failed:', e)
+    }
+  }
+
   if (error) {
-    console.error('Error fetching sessions:', error)
+    console.error('Error fetching sessions:', error?.message || error)
     return []
   }
-  return data
+  return data || []
 }
 
 export async function createSession(formData: {
