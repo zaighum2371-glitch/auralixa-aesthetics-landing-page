@@ -7,9 +7,10 @@ interface RoleManagerProps {
   userId: string
   currentRole: 'user' | 'client' | 'admin'
   onUpdateRole: (userId: string, newRole: 'user' | 'client' | 'admin') => Promise<void>
+  disabled?: boolean
 }
 
-export function RoleManager({ userId, currentRole, onUpdateRole }: RoleManagerProps) {
+export function RoleManager({ userId, currentRole, onUpdateRole, disabled }: RoleManagerProps) {
   const [loading, setLoading] = useState(false)
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -30,8 +31,8 @@ export function RoleManager({ userId, currentRole, onUpdateRole }: RoleManagerPr
       <select
         value={currentRole}
         onChange={handleChange}
-        disabled={loading}
-        className="text-xs bg-background border border-border rounded-md px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-gold"
+        disabled={loading || disabled}
+        className={`text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-gold ${disabled ? 'opacity-50 cursor-not-allowed text-foreground/50' : 'text-foreground'}`}
       >
         <option value="user">Member (user)</option>
         <option value="client">Client (client)</option>

@@ -10,6 +10,8 @@ import { MockCategory, MockSession, MockClient, MockBooking } from '@/lib/admin-
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const currentUserId = user?.id
 
   // Concurrently fetch profiles, categories, treatments, bookings, and clients
   const [
@@ -163,6 +165,7 @@ export default async function AdminDashboardPage() {
       userList={userList}
       signedUrlMap={signedUrlMap}
       updateUserRole={updateUserRole}
+      currentUserId={currentUserId}
       liveData={{
         categories,
         sessions,

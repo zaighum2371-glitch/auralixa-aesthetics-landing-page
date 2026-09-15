@@ -40,6 +40,7 @@ interface AdminOverviewProps {
     clients?: MockClient[]
     bookings?: MockBooking[]
   }
+  currentUserId?: string
 }
 
 type DateRange = 'today' | '7d' | 'month' | 'quarter'
@@ -50,6 +51,7 @@ export function AdminOverview({
   signedUrlMap,
   updateUserRole,
   liveData,
+  currentUserId,
 }: AdminOverviewProps) {
   const {
     categories: storeCategories,
@@ -872,10 +874,15 @@ export function AdminOverview({
                             </div>
                           )}
                           <div className="min-w-0">
-                            <div className="font-medium text-foreground text-xs sm:text-sm">
+                            <div className="font-medium text-foreground text-xs sm:text-sm flex items-center gap-2">
                               {userProfile.first_name || userProfile.last_name
                                 ? `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim()
                                 : 'Unnamed User'}
+                              {userProfile.id === currentUserId && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider font-semibold bg-gold/20 text-gold border border-gold/30">
+                                  You
+                                </span>
+                              )}
                             </div>
                             <div className="text-[11px] text-foreground/50 truncate">
                               ID: {userProfile.id.slice(0, 8)}...
@@ -910,6 +917,7 @@ export function AdminOverview({
                             userId={userProfile.id}
                             currentRole={userProfile.role}
                             onUpdateRole={updateUserRole}
+                            disabled={userProfile.id === currentUserId}
                           />
                           <Link
                             href={`/admin/clients?q=${encodeURIComponent(userProfile.email || '')}`}

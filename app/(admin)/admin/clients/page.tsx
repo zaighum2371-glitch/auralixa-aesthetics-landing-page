@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { ClientsManager } from '@/components/admin/clients-manager'
 import { getClientsWithAggregates } from '@/actions/admin-clients'
 import { MockClient } from '@/lib/admin-mock-data'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata = {
   title: 'Clients & Medical Intake | Auralixa Aesthetics Admin',
@@ -9,6 +10,10 @@ export const metadata = {
 }
 
 export default async function ClientsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const currentUserId = user?.id
+
   const rawClients = await getClientsWithAggregates()
 
   const initialClients: MockClient[] = (rawClients || []).map((c: any) => ({
@@ -44,7 +49,7 @@ export default async function ClientsPage() {
         </div>
       }
     >
-      <ClientsManager initialClients={initialClients} />
+      <ClientsManager initialClients={initialClients} currentUserId={currentUserId} />
     </Suspense>
   )
 }

@@ -78,15 +78,6 @@ export function AdminSidebar() {
           <Sparkles className="w-6 h-6 text-gold group-hover:scale-110 transition-transform" />
         </Link>
 
-        {/* Toggle Expand Button */}
-        <button
-          onClick={toggleSidebar}
-          className="p-2 rounded-lg border border-border/80 text-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors"
-          title="Expand sidebar"
-        >
-          <PanelLeftOpen className="w-4 h-4 text-gold" />
-        </button>
-
         {/* Nav Items */}
         <nav className="space-y-2 w-full px-2">
           {navItems.map((item) => {
@@ -166,15 +157,6 @@ export function AdminSidebar() {
               </span>
             </div>
           </Link>
-
-          {/* Desktop collapse button */}
-          <button
-            onClick={toggleSidebar}
-            className="hidden md:flex p-1.5 text-foreground/50 hover:text-foreground rounded-lg hover:bg-muted/40 transition-colors"
-            title="Collapse sidebar"
-          >
-            <PanelLeftClose className="w-4 h-4 text-gold" />
-          </button>
 
           {/* Mobile close button */}
           <button

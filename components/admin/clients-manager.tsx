@@ -12,6 +12,7 @@ import {
   Calendar,
   AlertTriangle,
   FileText,
+  Eye,
   Edit2,
   Trash2,
   X,
@@ -33,9 +34,10 @@ import {
 
 interface ClientsManagerProps {
   initialClients?: MockClient[]
+  currentUserId?: string
 }
 
-export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
+export function ClientsManager({ initialClients, currentUserId }: ClientsManagerProps = {}) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const autoAction = searchParams.get('action')
@@ -349,7 +351,11 @@ export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
                     client.medical_allergies.toLowerCase() !== 'none recorded'
 
                   return (
-                    <tr key={client.id} className="hover:bg-muted/25 transition-colors">
+                    <tr 
+                      key={client.id} 
+                      className="hover:bg-muted/25 transition-colors cursor-pointer"
+                      onClick={() => setSelectedClient360(client)}
+                    >
                       {/* Name & Contact */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
@@ -359,9 +365,14 @@ export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
                           <div>
                             <button
                               onClick={() => setSelectedClient360(client)}
-                              className="font-medium text-foreground hover:text-gold transition-colors text-left"
+                              className="font-medium text-foreground hover:text-gold transition-colors text-left flex items-center gap-2"
                             >
-                              {client.first_name} {client.last_name}
+                              <span>{client.first_name} {client.last_name}</span>
+                              {client.id === currentUserId && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider font-semibold bg-gold/20 text-gold border border-gold/30">
+                                  You
+                                </span>
+                              )}
                             </button>
                             <div className="flex items-center gap-2 text-[11px] text-foreground/50 mt-0.5">
                               <span>{client.email}</span>
@@ -426,25 +437,14 @@ export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
                       <td className="py-3.5 px-4 text-right whitespace-nowrap sticky right-0 bg-card/95 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => setSelectedClient360(client)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedClient360(client);
+                            }}
                             className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
-                            title="Open Client 360 View"
+                            title="View Client Details"
                           >
-                            <FileText className="w-3.5 h-3.5 text-gold" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenEdit(client)}
-                            className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
-                            title="Edit Client Profile"
-                          >
-                            <Edit2 className="w-3.5 h-3.5 text-gold" />
-                          </button>
-                          <button
-                            onClick={() => setDeletingClient(client)}
-                            className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
-                            title="Delete Client"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Eye className="w-3.5 h-3.5 text-gold" />
                           </button>
                         </div>
                       </td>
@@ -689,8 +689,13 @@ export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
                   {`${selectedClient360.first_name[0] || ''}${selectedClient360.last_name[0] || ''}`.toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="font-serif text-xl font-medium text-foreground">
-                    {selectedClient360.first_name} {selectedClient360.last_name}
+                  <h3 className="font-serif text-xl font-medium text-foreground flex items-center gap-2">
+                    <span>{selectedClient360.first_name} {selectedClient360.last_name}</span>
+                    {selectedClient360.id === currentUserId && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold bg-gold/20 text-gold border border-gold/30">
+                        You
+                      </span>
+                    )}
                   </h3>
                   <div className="flex items-center gap-2 text-xs text-foreground/60 mt-0.5">
                     <span className="font-mono">{selectedClient360.email}</span>
@@ -869,11 +874,25 @@ export function ClientsManager({ initialClients }: ClientsManagerProps = {}) {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => {
+                    setDeletingClient(selectedClient360)
+                  }}
+                  disabled={selectedClient360.id === currentUserId}
+                  className={`px-4 py-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 ${
+                    selectedClient360.id === currentUserId
+                      ? 'border-border/40 text-foreground/30 bg-muted/30 cursor-not-allowed'
+                      : 'border-destructive/30 text-destructive/80 hover:text-destructive hover:bg-destructive/10'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
+                </button>
+                <button
                   onClick={() => handleOpenEdit(selectedClient360)}
                   className="px-4 py-2 rounded-xl border border-border/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center gap-1.5"
                 >
                   <Edit2 className="w-3.5 h-3.5 text-gold" />
-                  <span>Edit Profile</span>
+                  <span>Edit</span>
                 </button>
                 <button
                   onClick={() => setSelectedClient360(null)}
