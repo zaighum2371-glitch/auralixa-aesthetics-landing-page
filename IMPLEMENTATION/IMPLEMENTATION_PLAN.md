@@ -383,12 +383,16 @@ app/
     - [x] Dedicated Operational Quick Actions Bar with 5 shortcut tiles (*New Booking*, *Add Treatment*, *New Category*, *Register Client*, *Desk Payment*).
     - [x] Contextual triage tabs (*All Operations*, *Unsettled Dues*, *Allergy Alerts*).
     - [x] Upcoming Clinic Agenda preview and Treatment Categories distribution.
+    - [x] Add interactive tooltips to summary cards for better metric clarity.
+    - [x] Replace static Treatment Categories box with a dynamic, scrollable Recent Activity stream displaying user and admin events with built-in filtering.
     - [x] Live Supabase `profiles` directory and interactive role switcher preserved at the bottom for role testing.
   - [x] **Sessions & Treatment Categories Suite (`app/(admin)/admin/sessions/page.tsx` & `components/admin/sessions-manager.tsx`):**
     - [x] Dual-tab layout: *Treatments Catalog* and *Session Categories* taxonomy.
     - [x] Contextual quick action bar to filter *Active Only*, *Drafts*, or trigger category creation.
     - [x] Search treatments by title, benefits, or description; filter by category and status.
     - [x] Full CRUD modals: Add Treatment, Edit Treatment, Archive Treatment, Add Category, Edit Category, Delete Category.
+    - [x] Refactored Treatments and Categories views into a unified data table layout consistent with other dashboard sections.
+    - [x] Introduced View Modals (Dossier) for both Treatments and Categories to cleanly consolidate detailed information and action buttons (Edit/Delete).
   - [x] **Bookings & In-Person Desk Ledger (`app/(admin)/admin/bookings/page.tsx` & `components/admin/bookings-manager.tsx`):**
     - [x] Status filter tabs: *All*, *Pending*, *Confirmed*, *Completed*, *Cancelled / No-Show*.
     - [x] In-Person Desk Settlement Modal: Record payments via Chip & PIN Terminal, Cash, or Gift Voucher, automatically updating booking and client spend.

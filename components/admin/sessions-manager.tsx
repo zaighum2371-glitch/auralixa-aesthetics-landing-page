@@ -18,6 +18,7 @@ import {
   Tag,
   SlidersHorizontal,
   ChevronRight,
+  Eye,
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { MockSession, MockCategory } from '@/lib/admin-mock-data'
@@ -73,6 +74,9 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
   const [deletingItem, setDeletingItem] = useState<{ type: 'session' | 'category'; id: string; name: string } | null>(
     null
   )
+
+  const [viewingSession, setViewingSession] = useState<MockSession | null>(null)
+  const [viewingCategory, setViewingCategory] = useState<MockCategory | null>(null)
 
   // Treatment Form State
   const [treatmentForm, setTreatmentForm] = useState({
@@ -434,7 +438,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
             </button>
           </div>
 
-          {/* Treatments Grid */}
+          {/* Treatments Table */}
           {filteredSessions.length === 0 ? (
             <div className="bg-card border border-border/80 rounded-2xl p-12 text-center space-y-3">
               <AlertCircle className="w-8 h-8 text-foreground/30 mx-auto" />
@@ -444,110 +448,94 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-gold/60 transition-all group"
-                >
-                  <div className="space-y-3">
-                    {/* Header: Category & Status */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-gold bg-gold/10 px-2.5 py-0.5 rounded-full border border-gold/20">
-                        {session.category_name}
-                      </span>
-                      <span
-                        className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${
-                          session.status === 'active'
-                            ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
-                            : session.status === 'draft'
-                            ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
-                            : 'bg-muted text-foreground/50 border-border'
-                        }`}
+            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-border/70 bg-muted/30 text-foreground/60 font-semibold uppercase tracking-wider text-[11px]">
+                      <th className="py-3 px-4">Treatment & Category</th>
+                      <th className="py-3 px-4 hidden md:table-cell">Details</th>
+                      <th className="py-3 px-4">Pricing & Duration</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {filteredSessions.map((session) => (
+                      <tr 
+                        key={session.id}
+                        onClick={() => setViewingSession(session)}
+                        className="hover:bg-muted/25 transition-colors cursor-pointer group"
                       >
-                        {session.status}
-                      </span>
-                    </div>
+                        {/* Treatment & Category */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-serif font-medium text-foreground text-sm group-hover:text-gold transition-colors">
+                            {session.title}
+                          </div>
+                          <div className="mt-1">
+                            <span className="text-[10px] font-medium text-gold bg-gold/10 px-2 py-0.5 rounded-md border border-gold/20">
+                              {session.category_name}
+                            </span>
+                          </div>
+                        </td>
 
-                    {/* Title & Description */}
-                    <div>
-                      <h3 className="font-serif text-lg font-medium text-foreground group-hover:text-gold transition-colors">
-                        {session.title}
-                      </h3>
-                      <p className="text-xs text-foreground/60 line-clamp-2 mt-1">
-                        {session.description}
-                      </p>
-                    </div>
+                        {/* Details */}
+                        <td className="py-3.5 px-4 hidden md:table-cell max-w-[200px]">
+                          <p className="text-xs text-foreground/60 truncate">
+                            {session.description}
+                          </p>
+                          <div className="flex items-center gap-1 text-[11px] text-foreground/50 mt-1 truncate">
+                            <MapPin className="w-3 h-3 text-gold shrink-0" />
+                            <span className="truncate">{session.location}</span>
+                          </div>
+                        </td>
 
-                    {/* Benefits Tags */}
-                    {session.benefits && session.benefits.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {session.benefits.slice(0, 3).map((benefit: string, idx: number) => (
+                        {/* Pricing & Duration */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="font-serif font-semibold text-foreground text-sm">
+                            £{session.pricing.toFixed(2)}
+                          </div>
+                          <div className="flex items-center gap-1 text-[11px] text-foreground/50 mt-0.5">
+                            <Clock className="w-3 h-3" />
+                            <span>{session.duration_minutes}m (+{session.buffer_minutes}m buffer)</span>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <span
-                            key={idx}
-                            className="text-[10px] bg-muted/60 text-foreground/70 px-2 py-0.5 rounded-md border border-border/50"
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${
+                              session.status === 'active'
+                                ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                                : session.status === 'draft'
+                                ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                                : 'bg-muted text-foreground/50 border-border'
+                            }`}
                           >
-                            {benefit}
+                            {session.status}
                           </span>
-                        ))}
-                        {session.benefits.length > 3 && (
-                          <span className="text-[10px] text-foreground/40 self-center">
-                            +{session.benefits.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                        </td>
 
-                  {/* Pricing & Duration Bar */}
-                  <div className="mt-4 pt-4 border-t border-border/60 space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1 font-serif text-base font-semibold text-foreground">
-                        <span>£{session.pricing.toFixed(2)}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-foreground/60 text-[11px]">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-gold" />
-                          <span>{session.duration_minutes}m</span>
-                        </span>
-                        <span>+{session.buffer_minutes}m buffer</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-foreground/50">
-                      <span className="flex items-center gap-1 truncate max-w-[180px]">
-                        <MapPin className="w-3 h-3 text-gold shrink-0" />
-                        <span className="truncate">{session.location}</span>
-                      </span>
-                      <span>Max {session.max_slots} slots/day</span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-end gap-2 pt-2">
-                      <button
-                        onClick={() => handleOpenEditTreatment(session)}
-                        className="px-3 py-1.5 rounded-lg border border-border/80 bg-background text-xs font-medium text-foreground hover:text-gold hover:border-gold flex items-center gap-1.5 transition-colors shadow-2xs"
-                      >
-                        <Edit2 className="w-3 h-3 text-gold" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        onClick={() =>
-                          setDeletingItem({
-                            type: 'session',
-                            id: session.id,
-                            name: session.title,
-                          })
-                        }
-                        className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
-                        title="Archive treatment"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap sticky right-0 bg-card/95 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewingSession(session);
+                            }}
+                            className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
+                            title="View Session Details"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-gold" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
@@ -576,82 +564,94 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {categories.map((cat) => {
-              const assignedSessions = sessions.filter(
-                (s) => s.session_type_id === cat.id || s.category_name === cat.name
-              )
+          <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-border/70 bg-muted/30 text-foreground/60 font-semibold uppercase tracking-wider text-[11px]">
+                    <th className="py-3 px-4">Category Name</th>
+                    <th className="py-3 px-4 hidden md:table-cell">Description</th>
+                    <th className="py-3 px-4">Defaults</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {categories.map((cat) => {
+                    const assignedSessions = sessions.filter(
+                      (s) => s.session_type_id === cat.id || s.category_name === cat.name
+                    )
 
-              return (
-                <div
-                  key={cat.id}
-                  className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-gold/60 transition-all group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-foreground/50">
-                        /{cat.slug}
-                      </span>
-                      <span
-                        className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${
-                          cat.is_active
-                            ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
-                            : 'bg-muted text-foreground/50 border-border'
-                        }`}
+                    return (
+                      <tr
+                        key={cat.id}
+                        onClick={() => setViewingCategory(cat)}
+                        className="hover:bg-muted/25 transition-colors cursor-pointer group"
                       >
-                        {cat.is_active ? 'Active' : 'Disabled'}
-                      </span>
-                    </div>
+                        {/* Category Name */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-serif font-medium text-foreground text-sm group-hover:text-gold transition-colors">
+                            {cat.name}
+                          </div>
+                          <div className="mt-1">
+                            <span className="text-[10px] font-mono text-foreground/50">
+                              /{cat.slug}
+                            </span>
+                          </div>
+                        </td>
 
-                    <div>
-                      <h3 className="font-serif text-lg font-medium text-foreground group-hover:text-gold transition-colors">
-                        {cat.name}
-                      </h3>
-                      <p className="text-xs text-foreground/60 mt-1 line-clamp-3">
-                        {cat.description}
-                      </p>
-                    </div>
+                        {/* Description */}
+                        <td className="py-3.5 px-4 hidden md:table-cell max-w-[250px]">
+                          <p className="text-xs text-foreground/60 truncate">
+                            {cat.description}
+                          </p>
+                          <div className="text-[10px] font-medium text-foreground/70 bg-muted/60 px-2 py-0.5 rounded-md border border-border/50 inline-block mt-1.5">
+                            {assignedSessions.length} treatments assigned
+                          </div>
+                        </td>
 
-                    <div className="flex items-center gap-3 text-xs text-foreground/70 pt-1">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-gold" />
-                        <span>Default: {cat.default_duration_minutes} mins</span>
-                      </span>
-                      <span>+{cat.buffer_minutes}m buffer</span>
-                    </div>
-                  </div>
+                        {/* Defaults */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1 text-[11px] text-foreground/70">
+                            <Clock className="w-3.5 h-3.5 text-gold shrink-0" />
+                            <span>{cat.default_duration_minutes}m (+{cat.buffer_minutes}m buffer)</span>
+                          </div>
+                        </td>
 
-                  <div className="mt-4 pt-4 border-t border-border/60 flex items-center justify-between">
-                    <span className="text-xs font-medium text-foreground/70 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/50">
-                      {assignedSessions.length} treatments assigned
-                    </span>
+                        {/* Status */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${
+                              cat.is_active
+                                ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                                : 'bg-muted text-foreground/50 border-border'
+                            }`}
+                          >
+                            {cat.is_active ? 'Active' : 'Disabled'}
+                          </span>
+                        </td>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleOpenEditCategory(cat)}
-                        className="px-3 py-1.5 rounded-lg border border-border/80 bg-background text-xs font-medium text-foreground hover:text-gold hover:border-gold flex items-center gap-1.5 transition-colors shadow-2xs"
-                      >
-                        <Edit2 className="w-3 h-3 text-gold" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        onClick={() =>
-                          setDeletingItem({
-                            type: 'category',
-                            id: cat.id,
-                            name: cat.name,
-                          })
-                        }
-                        className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
-                        title="Delete category"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap sticky right-0 bg-card/95 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setViewingCategory(cat)
+                            }}
+                            className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
+                            title="View Category Details"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-gold" />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -993,6 +993,298 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
               >
                 Yes, Delete
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Session View Modal (Dossier) */}
+      {viewingSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            onClick={() => setViewingSession(null)}
+          ></div>
+          <div
+            className="relative w-full max-w-2xl bg-card border border-border/80 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border/60 bg-muted/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gold/10 text-gold flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl font-medium text-foreground">
+                    {viewingSession.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-medium text-gold bg-gold/10 px-2 py-0.5 rounded-md border border-gold/20">
+                      {viewingSession.category_name}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${
+                        viewingSession.status === 'active'
+                          ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                          : viewingSession.status === 'draft'
+                          ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                          : 'bg-muted text-foreground/50 border-border'
+                      }`}
+                    >
+                      {viewingSession.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingSession(null)}
+                className="p-2 text-foreground/50 hover:text-foreground hover:bg-muted rounded-full transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
+              {/* Description */}
+              <div>
+                <h4 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2">
+                  Description
+                </h4>
+                <p className="text-sm text-foreground/80 leading-relaxed">
+                  {viewingSession.description}
+                </p>
+              </div>
+
+              {/* Grid Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-2 text-gold mb-1.5">
+                    <PoundSterling className="w-4 h-4" />
+                    <span className="text-sm font-semibold text-foreground">Pricing</span>
+                  </div>
+                  <div className="text-xl font-serif text-foreground">
+                    £{viewingSession.pricing.toFixed(2)}
+                  </div>
+                </div>
+                
+                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-2 text-gold mb-1.5">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-semibold text-foreground">Duration</span>
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {viewingSession.duration_minutes} mins
+                  </div>
+                  <div className="text-xs text-foreground/50 mt-0.5">
+                    + {viewingSession.buffer_minutes} mins buffer
+                  </div>
+                </div>
+
+                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-2 text-gold mb-1.5">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-sm font-semibold text-foreground">Location</span>
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {viewingSession.location}
+                  </div>
+                </div>
+
+                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-2 text-gold mb-1.5">
+                    <Layers className="w-4 h-4" />
+                    <span className="text-sm font-semibold text-foreground">Capacity</span>
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    Max {viewingSession.max_slots} slots/day
+                  </div>
+                </div>
+              </div>
+
+              {/* Benefits */}
+              {viewingSession.benefits && viewingSession.benefits.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-3">
+                    Treatment Benefits
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingSession.benefits.map((benefit: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="text-xs bg-muted/60 text-foreground/80 px-3 py-1.5 rounded-lg border border-border/50 flex items-center gap-1.5"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        {benefit}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-5 border-t border-border/60 bg-muted/10 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setDeletingItem({
+                    type: 'session',
+                    id: viewingSession.id,
+                    name: viewingSession.title,
+                  })
+                  setViewingSession(null)
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Archive Session
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setViewingSession(null)}
+                  className="px-5 py-2 text-xs font-semibold text-foreground/70 hover:text-foreground transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    handleOpenEditTreatment(viewingSession)
+                    setViewingSession(null)
+                  }}
+                  className="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-gold" />
+                  Edit Treatment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Category View Modal (Dossier) */}
+      {viewingCategory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            onClick={() => setViewingCategory(null)}
+          ></div>
+          <div
+            className="relative w-full max-w-xl bg-card border border-border/80 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border/60 bg-muted/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gold/10 text-gold flex items-center justify-center shrink-0">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl font-medium text-foreground">
+                    {viewingCategory.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-mono text-foreground/50">
+                      /{viewingCategory.slug}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${
+                        viewingCategory.is_active
+                          ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                          : 'bg-muted text-foreground/50 border-border'
+                      }`}
+                    >
+                      {viewingCategory.is_active ? 'Active' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingCategory(null)}
+                className="p-2 text-foreground/50 hover:text-foreground hover:bg-muted rounded-full transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
+              {/* Description */}
+              <div>
+                <h4 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2">
+                  Description
+                </h4>
+                <p className="text-sm text-foreground/80 leading-relaxed">
+                  {viewingCategory.description}
+                </p>
+              </div>
+
+              {/* Grid Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-2 text-gold mb-1.5">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-semibold text-foreground">Default Duration</span>
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {viewingCategory.default_duration_minutes} mins
+                  </div>
+                  <div className="text-xs text-foreground/50 mt-0.5">
+                    + {viewingCategory.buffer_minutes} mins clinical buffer
+                  </div>
+                </div>
+
+                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-2 text-gold mb-1.5">
+                    <Layers className="w-4 h-4" />
+                    <span className="text-sm font-semibold text-foreground">Assigned Treatments</span>
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {sessions.filter(s => s.session_type_id === viewingCategory.id || s.category_name === viewingCategory.name).length} treatments
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-5 border-t border-border/60 bg-muted/10 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setDeletingItem({
+                    type: 'category',
+                    id: viewingCategory.id,
+                    name: viewingCategory.name,
+                  })
+                  setViewingCategory(null)
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Category
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setViewingCategory(null)}
+                  className="px-5 py-2 text-xs font-semibold text-foreground/70 hover:text-foreground transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    handleOpenEditCategory(viewingCategory)
+                    setViewingCategory(null)
+                  }}
+                  className="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-gold" />
+                  Edit Category
+                </button>
+              </div>
             </div>
           </div>
         </div>

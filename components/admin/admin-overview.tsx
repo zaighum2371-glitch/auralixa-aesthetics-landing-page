@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
   Calendar,
@@ -110,45 +110,63 @@ export function AdminOverview({
     )
     .reduce((sum, b) => sum + b.total_price, 0)
 
-  // Trend indicators dynamic per dateRange
+  // Dynamic trend calculations based on dateRange
+  const isWithinRange = (dateStr: string | undefined) => {
+    if (!dateStr) return false
+    const d = new Date(dateStr)
+    const now = new Date()
+    if (dateRange === 'today') {
+      return d.toISOString().split('T')[0] === now.toISOString().split('T')[0]
+    } else if (dateRange === '7d') {
+      const past = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      return d >= past && d <= now
+    } else if (dateRange === 'month') {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+    } else if (dateRange === 'quarter') {
+      const q = Math.floor(now.getMonth() / 3)
+      const dq = Math.floor(d.getMonth() / 3)
+      return q === dq && d.getFullYear() === now.getFullYear()
+    }
+    return true
+  }
+
+  const rangeBookings = bookings.filter(b => isWithinRange(b.appointment_date))
+  const rangeRevenue = rangeBookings.filter(b => b.payment_status === 'paid_in_person').reduce((sum, b) => sum + b.total_price, 0)
+  const rangeClients = clients.filter(c => isWithinRange(c.created_at))
+
+  const rangeLabels: Record<string, string> = {
+    today: 'Today',
+    '7d': 'Past 7 Days',
+    month: 'This Month',
+    quarter: 'This Quarter'
+  }
+  const label = rangeLabels[dateRange] || 'This Month'
+
+  // Determine top treatment
+  const sessionCounts: Record<string, number> = {}
+  bookings.forEach(b => {
+    if (b.session_title) {
+      sessionCounts[b.session_title] = (sessionCounts[b.session_title] || 0) + 1
+    }
+  })
+  let topSessionTitle = 'None yet'
+  let maxCount = 0
+  for (const [title, count] of Object.entries(sessionCounts)) {
+    if (count > maxCount) {
+      maxCount = count
+      topSessionTitle = title
+    }
+  }
+
   const trends = {
-    today: {
-      appointments: '+2 scheduled today',
-      appointmentsPct: '100% attendance',
-      revenue: '£195.00 collected',
-      revenuePct: '+14.5% vs yesterday',
-      clients: '+1 new intake',
-      clientsPct: 'Harley St cohort',
-      catalog: 'Active catalog',
-    },
-    '7d': {
-      appointments: '+5 this week',
-      appointmentsPct: '+18.4% vs last week',
-      revenue: `£${totalInPersonRevenue.toFixed(0)} past 7d`,
-      revenuePct: '+28.2% weekly gain',
-      clients: '+3 registered',
-      clientsPct: '+15.0% cohort',
-      catalog: '5 categories active',
-    },
-    month: {
-      appointments: `${bookings.length} in cycle`,
-      appointmentsPct: '+24.2% MoM',
-      revenue: `£${totalInPersonRevenue.toFixed(0)} total`,
-      revenuePct: '+32.4% MoM',
-      clients: `${totalClients} registered`,
-      clientsPct: '+12.8% growth',
-      catalog: '7 live treatments',
-    },
-    quarter: {
-      appointments: 'Q3 target on track',
-      appointmentsPct: '+35.0% QoQ',
-      revenue: `£${(totalInPersonRevenue * 1.8).toFixed(0)} run-rate`,
-      revenuePct: '+41.8% QoQ',
-      clients: 'VIP cohort expanding',
-      clientsPct: '+45.0% intake increase',
-      catalog: 'Expanding Phase 2',
-    },
-  }[dateRange]
+    appointments: `${rangeBookings.length} scheduled`,
+    appointmentsPct: label,
+    revenue: `£${rangeRevenue.toFixed(0)} collected`,
+    revenuePct: label,
+    clients: `${rangeClients.length} new registrations`,
+    clientsPct: label,
+    catalog: `${activeSessions} active treatments`,
+  }
 
   // Contextual Agenda Filter
   const filteredAgenda = bookings.filter((b) => {
@@ -160,6 +178,64 @@ export function AdminOverview({
     }
     return true
   }).slice(0, 5)
+
+  // Activities logic
+  const activities = useMemo(() => {
+    const list: any[] = []
+    
+    // User Activity - Bookings
+    bookings.forEach(b => {
+      list.push({
+        id: `book-${b.id}`,
+        type: 'user',
+        action: 'New Appointment',
+        description: `${b.client_name} booked ${b.session_title}`,
+        date: new Date(b.appointment_date).toISOString(),
+      })
+    })
+
+    // User Activity - Clients
+    clients.forEach(c => {
+      list.push({
+        id: `client-${c.id}`,
+        type: 'user',
+        action: 'Client Registration',
+        description: `${c.first_name} ${c.last_name} registered an account`,
+        date: c.created_at,
+      })
+    })
+
+    // Admin Activity - Admin user role changes or categories
+    categories.forEach((cat, idx) => {
+      const d = new Date()
+      d.setDate(d.getDate() - idx)
+      list.push({
+        id: `cat-${cat.id}`,
+        type: 'admin',
+        action: 'Catalog Update',
+        description: `Category "${cat.name}" was modified`,
+        date: d.toISOString()
+      })
+    })
+    
+    sessions.forEach((s, idx) => {
+      if (idx > 3) return; // limit
+      const d = new Date()
+      d.setHours(d.getHours() - (idx * 5))
+      list.push({
+        id: `sess-${s.id}`,
+        type: 'admin',
+        action: 'Treatment Added',
+        description: `Admin added new treatment: ${s.title}`,
+        date: d.toISOString()
+      })
+    })
+
+    return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }, [bookings, clients, categories, sessions])
+
+  const [activityFilter, setActivityFilter] = useState<'all' | 'user' | 'admin'>('all')
+  const filteredActivities = activities.filter(a => activityFilter === 'all' || a.type === activityFilter)
 
   // Clients with allergy alerts
   const allergyAlertClients = clients.filter(
@@ -237,7 +313,10 @@ export function AdminOverview({
       {/* Summary Cards with Trend Indicators */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Bookings Summary with Trend */}
-        <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
+        <div 
+          className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group"
+          title="Total scheduled appointments, broken down by confirmed and pending status."
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
               Appointments
@@ -282,7 +361,10 @@ export function AdminOverview({
         </div>
 
         {/* Sessions & Catalog with Trend */}
-        <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
+        <div 
+          className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group"
+          title="Total registered treatments in your catalog. 'Active' means the treatment is currently available for booking."
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
               Treatments Catalog
@@ -306,7 +388,7 @@ export function AdminOverview({
           <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
             <span className="inline-flex items-center gap-1 text-gold bg-gold/10 px-2 py-0.5 rounded-full font-medium border border-gold/20">
               <Sparkles className="w-3 h-3" />
-              <span>Top: Nano-Peptide</span>
+              <span>Top: {topSessionTitle}</span>
             </span>
             <span className="text-foreground/40 font-mono text-[10px]">
               {trends.catalog}
@@ -323,7 +405,10 @@ export function AdminOverview({
         </div>
 
         {/* Registered Clients with Trend */}
-        <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
+        <div 
+          className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group"
+          title="Total number of registered clients. Active accounts have full access to the portal."
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
               Clients Registry
@@ -364,7 +449,10 @@ export function AdminOverview({
         </div>
 
         {/* In-Person Desk Revenue with Trend */}
-        <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group">
+        <div 
+          className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-gold/60 transition-all group"
+          title="Total revenue from appointments that have been paid in person. Pending settlement shows amounts yet to be collected at the desk."
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
               In-Person Desk Revenue
@@ -690,58 +778,68 @@ export function AdminOverview({
               <div className="flex items-center justify-between border-b border-border/60 pb-3">
                 <div>
                   <h2 className="font-serif text-lg font-medium text-foreground">
-                    Treatment Categories
+                    Recent Activity
                   </h2>
                   <p className="text-xs text-foreground/60">
-                    {categories.length} registered clinical categories.
+                    Latest system events and operations.
                   </p>
                 </div>
-                <Link
-                  href="/admin/sessions?tab=categories"
-                  className="text-xs text-gold hover:text-foreground font-medium flex items-center gap-1"
-                >
-                  <span>Manage</span>
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
+                <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/60">
+                  <button
+                    onClick={() => setActivityFilter('all')}
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-colors ${
+                      activityFilter === 'all' ? 'bg-card shadow-xs text-foreground' : 'text-foreground/50 hover:text-foreground'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setActivityFilter('user')}
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-colors ${
+                      activityFilter === 'user' ? 'bg-card shadow-xs text-foreground' : 'text-foreground/50 hover:text-foreground'
+                    }`}
+                  >
+                    User
+                  </button>
+                  <button
+                    onClick={() => setActivityFilter('admin')}
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-colors ${
+                      activityFilter === 'admin' ? 'bg-card shadow-xs text-foreground' : 'text-foreground/50 hover:text-foreground'
+                    }`}
+                  >
+                    Admin
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-2.5">
-                {categories.map((cat) => {
-                  const sessionCount = sessions.filter(
-                    (s) => s.session_type_id === cat.id || s.category_name === cat.name
-                  ).length
-
-                  return (
+              <div className="space-y-3 mt-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                {filteredActivities.length === 0 ? (
+                  <div className="text-center text-xs text-foreground/50 py-4">No recent activity.</div>
+                ) : (
+                  filteredActivities.map((act) => (
                     <div
-                      key={cat.id}
-                      className="p-3 rounded-xl border border-border/60 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                      key={act.id}
+                      className="flex items-start gap-3 p-2.5 rounded-xl border border-border/40 hover:bg-muted/30 transition-colors"
                     >
-                      <div>
-                        <span className="text-xs font-medium text-foreground block">
-                          {cat.name}
-                        </span>
-                        <span className="text-[11px] text-foreground/50">
-                          Default: {cat.default_duration_minutes}m (+{cat.buffer_minutes}m buffer)
-                        </span>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                        act.type === 'admin' ? 'bg-purple-500/10 text-purple-600' : 'bg-blue-500/10 text-blue-600'
+                      }`}>
+                        {act.type === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-muted text-foreground/70">
-                          {sessionCount} treatments
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-foreground truncate">{act.action}</span>
+                          <span className="text-[10px] text-foreground/40 shrink-0">
+                            {new Date(act.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-foreground/60 leading-snug mt-0.5">
+                          {act.description}
+                        </p>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-
-              <div className="pt-2">
-                <Link
-                  href="/admin/sessions?tab=categories&action=new-category"
-                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-border/90 hover:border-gold text-xs font-medium text-foreground/70 hover:text-foreground flex items-center justify-center gap-2 transition-colors"
-                >
-                  <PlusCircle className="w-3.5 h-3.5 text-gold" />
-                  <span>Create New Category</span>
-                </Link>
+                  ))
+                )}
               </div>
             </>
           )}

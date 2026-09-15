@@ -4,6 +4,8 @@ import React, { useState, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   Calendar,
+  CalendarDays,
+  CalendarCheck,
   Search,
   PlusCircle,
   CreditCard,
@@ -24,6 +26,9 @@ import {
   Phone,
   Mail,
   ShieldCheck,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react'
 import { useAdminStore } from './admin-store-provider'
 import { MockBooking } from '@/lib/admin-mock-data'
@@ -71,7 +76,13 @@ export function BookingsManager({
   const [paymentFilter, setPaymentFilter] = useState<string>(
     initialFilter === 'pending-payment' ? 'pending_in_person' : 'all'
   )
+  const [sessionFilter, setSessionFilter] = useState<string>('all')
+  const [dateFilterType, setDateFilterType] = useState<string>('all')
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [sortField, setSortField] = useState<string>('date')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   // Modals
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(initialAction === 'new')
@@ -131,9 +142,90 @@ export function BookingsManager({
       else if (paymentFilter === 'paid_in_person')
         matchesPayment = b.payment_status === 'paid_in_person'
 
-      return matchesSearch && matchesStatus && matchesPayment
+      let matchesSession = true
+      if (sessionFilter !== 'all') {
+        matchesSession = b.session_id === sessionFilter
+      }
+
+      let matchesDate = true
+      if (dateFilterType === 'today') {
+        const today = new Date().toISOString().split('T')[0]
+        matchesDate = b.appointment_date === today
+      } else if (dateFilterType === 'this_week') {
+        const todayDate = new Date()
+        const day = todayDate.getDay()
+        const diff = todayDate.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+        const startOfWeek = new Date(todayDate.setDate(diff))
+        startOfWeek.setHours(0,0,0,0)
+        const endOfWeek = new Date(startOfWeek)
+        endOfWeek.setDate(endOfWeek.getDate() + 6)
+        endOfWeek.setHours(23,59,59,999)
+        
+        const bDate = new Date(b.appointment_date)
+        matchesDate = bDate >= startOfWeek && bDate <= endOfWeek
+      } else if (dateFilterType === 'this_month') {
+        const todayDate = new Date()
+        const bDate = new Date(b.appointment_date)
+        matchesDate = bDate.getMonth() === todayDate.getMonth() && bDate.getFullYear() === todayDate.getFullYear()
+      } else if (dateFilterType === 'custom') {
+        if (dateFrom && dateTo) {
+          matchesDate = b.appointment_date >= dateFrom && b.appointment_date <= dateTo
+        } else if (dateFrom) {
+          matchesDate = b.appointment_date >= dateFrom
+        } else if (dateTo) {
+          matchesDate = b.appointment_date <= dateTo
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesPayment && matchesSession && matchesDate
     })
-  }, [bookings, searchQuery, statusTab, paymentFilter])
+    
+    // Sort
+    return result.sort((a, b) => {
+      let aVal: any = ''
+      let bVal: any = ''
+
+      if (sortField === 'ref') {
+        aVal = a.booking_reference
+        bVal = b.booking_reference
+      } else if (sortField === 'client') {
+        aVal = a.client_name.toLowerCase()
+        bVal = b.client_name.toLowerCase()
+      } else if (sortField === 'treatment') {
+        aVal = a.session_title.toLowerCase()
+        bVal = b.session_title.toLowerCase()
+      } else if (sortField === 'date') {
+        aVal = `${a.appointment_date}T${a.start_time}`
+        bVal = `${b.appointment_date}T${b.start_time}`
+      } else if (sortField === 'price') {
+        aVal = a.total_price
+        bVal = b.total_price
+      } else if (sortField === 'status') {
+        aVal = a.status
+        bVal = b.status
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [bookings, searchQuery, statusTab, paymentFilter, sessionFilter, dateFilterType, dateFrom, dateTo, sortField, sortDirection])
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 inline-block opacity-40 hover:opacity-100 transition-opacity" />
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="w-3 h-3 ml-1 inline-block text-gold" /> : 
+      <ArrowDown className="w-3 h-3 ml-1 inline-block text-gold" />
+  }
 
   // Open New Booking Modal
   const handleOpenNew = () => {
@@ -401,29 +493,119 @@ export function BookingsManager({
         </div>
 
         {/* Filter / Search Row */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border/80 shadow-xs">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-foreground/40 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search reference, client name, email, or treatment..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border/70 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
-            />
+        <div className="flex flex-col gap-3 bg-card p-3 rounded-2xl border border-border/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-foreground/40 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search reference, client name, email, or treatment..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border/70 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <Filter className="w-3.5 h-3.5 text-foreground/40 hidden sm:block" />
+              
+              <select
+                value={sessionFilter}
+                onChange={(e) => setSessionFilter(e.target.value)}
+                className="w-full sm:w-auto px-3 py-1.5 text-xs rounded-xl border border-border/70 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+              >
+                <option value="all">All Treatments</option>
+                {sessions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+                className="w-full sm:w-auto px-3 py-1.5 text-xs rounded-xl border border-border/70 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+              >
+                <option value="all">All Payment Statuses</option>
+                <option value="pending_in_person">Pending In-Person Desk Settlement</option>
+                <option value="paid_in_person">Paid In-Person</option>
+              </select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter className="w-3.5 h-3.5 text-foreground/40 hidden sm:block" />
-            <select
-              value={paymentFilter}
-              onChange={(e) => setPaymentFilter(e.target.value)}
-              className="w-full sm:w-auto px-3 py-1.5 text-xs rounded-xl border border-border/70 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
+            <span className="text-[10px] font-semibold text-foreground/40 uppercase tracking-wider mr-1">
+              Date Filter:
+            </span>
+            <button
+              onClick={() => setDateFilterType('all')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                dateFilterType === 'all'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'bg-muted/60 hover:bg-muted text-foreground/70'
+              }`}
             >
-              <option value="all">All Payment Statuses</option>
-              <option value="pending_in_person">Pending In-Person Desk Settlement</option>
-              <option value="paid_in_person">Paid In-Person</option>
-            </select>
+              All Time
+            </button>
+            <button
+              onClick={() => setDateFilterType('today')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                dateFilterType === 'today'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'bg-muted/60 hover:bg-muted text-foreground/70'
+              }`}
+            >
+              <Calendar className="w-3 h-3" /> Today
+            </button>
+            <button
+              onClick={() => setDateFilterType('this_week')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                dateFilterType === 'this_week'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'bg-muted/60 hover:bg-muted text-foreground/70'
+              }`}
+            >
+              <CalendarDays className="w-3 h-3" /> This Week
+            </button>
+            <button
+              onClick={() => setDateFilterType('this_month')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                dateFilterType === 'this_month'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'bg-muted/60 hover:bg-muted text-foreground/70'
+              }`}
+            >
+              <CalendarCheck className="w-3 h-3" /> This Month
+            </button>
+            <button
+              onClick={() => setDateFilterType('custom')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                dateFilterType === 'custom'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'bg-muted/60 hover:bg-muted text-foreground/70'
+              }`}
+            >
+              Custom Range
+            </button>
+            
+            {dateFilterType === 'custom' && (
+              <div className="flex items-center gap-2 ml-2 animate-in fade-in duration-200">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="px-2 py-1 text-[11px] rounded-lg border border-border/70 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-gold/40"
+                />
+                <span className="text-foreground/50 text-[10px]">to</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="px-2 py-1 text-[11px] rounded-lg border border-border/70 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-gold/40"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -443,11 +625,36 @@ export function BookingsManager({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-border/70 bg-muted/30 text-foreground/60 font-semibold uppercase tracking-wider text-[11px]">
-                  <th className="py-3 px-4">Ref & Client</th>
-                  <th className="py-3 px-4">Treatment</th>
-                  <th className="py-3 px-4">Date & Time</th>
-                  <th className="py-3 px-4">Price & Settlement</th>
-                  <th className="py-3 px-4">Status</th>
+                  <th 
+                    className="py-3 px-4 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => toggleSort('client')}
+                  >
+                    Ref & Client <SortIcon field="client" />
+                  </th>
+                  <th 
+                    className="py-3 px-4 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => toggleSort('treatment')}
+                  >
+                    Treatment <SortIcon field="treatment" />
+                  </th>
+                  <th 
+                    className="py-3 px-4 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => toggleSort('date')}
+                  >
+                    Date & Time <SortIcon field="date" />
+                  </th>
+                  <th 
+                    className="py-3 px-4 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => toggleSort('price')}
+                  >
+                    Price & Settlement <SortIcon field="price" />
+                  </th>
+                  <th 
+                    className="py-3 px-4 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => toggleSort('status')}
+                  >
+                    Status <SortIcon field="status" />
+                  </th>
                   <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
                     Actions
                   </th>
@@ -455,7 +662,11 @@ export function BookingsManager({
               </thead>
               <tbody className="divide-y divide-border/40">
                 {filteredBookings.map((b) => (
-                  <tr key={b.id} className="hover:bg-muted/25 transition-colors">
+                  <tr 
+                    key={b.id} 
+                    onClick={() => setSelectedBookingDetails(b)}
+                    className="hover:bg-muted/25 transition-colors cursor-pointer group"
+                  >
                     {/* Ref & Client */}
                     <td className="py-3.5 px-4">
                       <div className="font-mono font-semibold text-foreground text-xs">
@@ -534,7 +745,8 @@ export function BookingsManager({
                         {/* Status Quick Switch */}
                         {b.status === 'pending' && (
                           <button
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation()
                               updateBooking(b.id, { status: 'confirmed' })
                               await serverUpdateBookingStatus(b.id, 'confirmed')
                             }}
@@ -547,7 +759,8 @@ export function BookingsManager({
 
                         {b.status === 'confirmed' && (
                           <button
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation()
                               updateBooking(b.id, { status: 'completed' })
                               await serverUpdateBookingStatus(b.id, 'completed')
                             }}
@@ -559,7 +772,10 @@ export function BookingsManager({
                         )}
 
                         <button
-                          onClick={() => setSelectedBookingDetails(b)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedBookingDetails(b)
+                          }}
                           className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
                           title="View complete booking record"
                         >
@@ -567,7 +783,10 @@ export function BookingsManager({
                         </button>
 
                         <button
-                          onClick={() => handleOpenEdit(b)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenEdit(b)
+                          }}
                           className="p-1.5 rounded-lg border border-border/80 bg-background text-foreground hover:text-gold hover:border-gold transition-colors shadow-2xs"
                           title="Edit appointment"
                         >
@@ -576,7 +795,10 @@ export function BookingsManager({
 
                         {b.status !== 'cancelled_by_admin' && b.status !== 'cancelled_by_client' && (
                           <button
-                            onClick={() => setCancellingBooking(b)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCancellingBooking(b)
+                            }}
                             className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
                             title="Cancel appointment"
                           >
@@ -585,7 +807,10 @@ export function BookingsManager({
                         )}
 
                         <button
-                          onClick={() => setDeletingBooking(b)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setDeletingBooking(b)
+                          }}
                           className="p-1.5 rounded-lg border border-destructive/30 bg-background text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
                           title="Delete appointment"
                         >
