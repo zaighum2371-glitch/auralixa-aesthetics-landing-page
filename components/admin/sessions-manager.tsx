@@ -100,6 +100,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
     description: '',
     default_duration_minutes: 60,
     buffer_minutes: 15,
+    capacity: '' as number | string,
     is_active: true,
   })
 
@@ -228,6 +229,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
       description: '',
       default_duration_minutes: 60,
       buffer_minutes: 15,
+      capacity: '',
       is_active: true,
     })
     setIsCategoryModalOpen(true)
@@ -242,6 +244,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
       description: cat.description,
       default_duration_minutes: cat.default_duration_minutes,
       buffer_minutes: cat.buffer_minutes,
+      capacity: cat.capacity || '',
       is_active: cat.is_active,
     })
     setIsCategoryModalOpen(true)
@@ -256,6 +259,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
       description: categoryForm.description,
       default_duration_minutes: Number(categoryForm.default_duration_minutes),
       buffer_minutes: Number(categoryForm.buffer_minutes),
+      capacity: categoryForm.capacity === '' ? null : Number(categoryForm.capacity),
       is_active: categoryForm.is_active,
     }
 
@@ -454,7 +458,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                   <thead>
                     <tr className="border-b border-border/70 bg-muted/30 text-foreground/60 font-semibold uppercase tracking-wider text-[11px]">
                       <th className="py-3 px-4">Treatment & Category</th>
-                      <th className="py-3 px-4 hidden md:table-cell">Details</th>
+                      <th className="py-3 px-4 hidden md:table-cell">Description</th>
                       <th className="py-3 px-4">Pricing & Duration</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
@@ -572,6 +576,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                     <th className="py-3 px-4">Category Name</th>
                     <th className="py-3 px-4 hidden md:table-cell">Description</th>
                     <th className="py-3 px-4">Defaults</th>
+                    <th className="py-3 px-4">Capacity</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
                       Actions
@@ -618,6 +623,11 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                             <Clock className="w-3.5 h-3.5 text-gold shrink-0" />
                             <span>{cat.default_duration_minutes}m (+{cat.buffer_minutes}m buffer)</span>
                           </div>
+                        </td>
+
+                        {/* Capacity */}
+                        <td className="py-3.5 px-4 whitespace-nowrap text-[11px] text-foreground/70">
+                          {cat.capacity ? `${cat.capacity} person(s)` : 'N/A'}
                         </td>
 
                         {/* Status */}
@@ -710,7 +720,15 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                   <label className="font-semibold text-foreground/70">Category Taxonomy *</label>
                   <select
                     value={treatmentForm.session_type_id}
-                    onChange={(e) => setTreatmentForm({ ...treatmentForm, session_type_id: e.target.value })}
+                    onChange={(e) => {
+                      const newId = e.target.value;
+                      const selCat = categories.find(c => c.id === newId);
+                      setTreatmentForm({ 
+                        ...treatmentForm, 
+                        session_type_id: newId,
+                        ...(selCat?.capacity ? { max_slots: selCat.capacity } : {})
+                      });
+                    }}
                     className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-xs"
                   >
                     {categories.map((c) => (
@@ -776,7 +794,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-foreground/70">Max Slots / Day</label>
+                  <label className="font-semibold text-foreground/70">Capacity (Max Slots / Day)</label>
                   <input
                     type="number"
                     value={treatmentForm.max_slots}
@@ -888,7 +906,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <label className="font-semibold text-foreground/70">Default Duration (Mins)</label>
                   <input
@@ -913,6 +931,21 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                       setCategoryForm({
                         ...categoryForm,
                         buffer_minutes: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-semibold text-foreground/70">Capacity (Optional)</label>
+                  <input
+                    type="number"
+                    value={categoryForm.capacity}
+                    onChange={(e) =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        capacity: e.target.value === '' ? '' : Number(e.target.value),
                       })
                     }
                     className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-xs"

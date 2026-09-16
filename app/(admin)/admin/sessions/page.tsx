@@ -22,6 +22,7 @@ export default async function SessionsPage() {
     default_duration_minutes: cat.default_duration_minutes || 60,
     buffer_minutes: cat.buffer_minutes || 15,
     is_active: cat.is_active,
+    capacity: cat.capacity || null,
   }))
 
   const mappedSessions = (sessions || []).map((s: any) => ({

@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -219,6 +221,66 @@ export type Database = {
           },
         ]
       }
+      clinic_settings: {
+        Row: {
+          advance_booking_days: number
+          booking_buffer_minutes: number
+          cancellation_notice_hours: number
+          clinic_address: string
+          clinic_email: string
+          clinic_name: string
+          clinic_phone: string
+          clinic_tagline: string | null
+          created_at: string
+          currency: string
+          currency_symbol: string
+          email_notifications_enabled: boolean
+          id: string
+          slot_interval_minutes: number
+          sms_notifications_enabled: boolean
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          advance_booking_days?: number
+          booking_buffer_minutes?: number
+          cancellation_notice_hours?: number
+          clinic_address?: string
+          clinic_email?: string
+          clinic_name?: string
+          clinic_phone?: string
+          clinic_tagline?: string | null
+          created_at?: string
+          currency?: string
+          currency_symbol?: string
+          email_notifications_enabled?: boolean
+          id?: string
+          slot_interval_minutes?: number
+          sms_notifications_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          advance_booking_days?: number
+          booking_buffer_minutes?: number
+          cancellation_notice_hours?: number
+          clinic_address?: string
+          clinic_email?: string
+          clinic_name?: string
+          clinic_phone?: string
+          clinic_tagline?: string | null
+          created_at?: string
+          currency?: string
+          currency_symbol?: string
+          email_notifications_enabled?: boolean
+          id?: string
+          slot_interval_minutes?: number
+          sms_notifications_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clinical_treatment_records: {
         Row: {
           after_photo_url: string | null
@@ -414,6 +476,7 @@ export type Database = {
       session_types: {
         Row: {
           buffer_minutes: number
+          capacity: number | null
           created_at: string
           default_duration_minutes: number
           description: string | null
@@ -425,6 +488,7 @@ export type Database = {
         }
         Insert: {
           buffer_minutes?: number
+          capacity?: number | null
           created_at?: string
           default_duration_minutes?: number
           description?: string | null
@@ -436,6 +500,7 @@ export type Database = {
         }
         Update: {
           buffer_minutes?: number
+          capacity?: number | null
           created_at?: string
           default_duration_minutes?: number
           description?: string | null
@@ -743,6 +808,49 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      audit_action: ["created", "updated", "archived", "cancelled"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "completed",
+        "cancelled_by_client",
+        "cancelled_by_admin",
+        "no_show",
+      ],
+      payment_status: [
+        "pending_in_person",
+        "paid_in_person",
+        "waived",
+        "refunded_in_person",
+      ],
+      session_status: ["draft", "active", "archived", "cancelled"],
+      user_role: ["user", "client", "admin"],
+      user_status: ["active", "suspended", "banned", "rejected"],
+    },
+  },
+} as const
+
 
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"]

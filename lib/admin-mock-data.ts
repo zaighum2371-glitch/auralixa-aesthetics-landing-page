@@ -8,6 +8,7 @@ export interface MockCategory {
   description: string
   default_duration_minutes: number
   buffer_minutes: number
+  capacity?: number | null
   is_active: boolean
 }
 

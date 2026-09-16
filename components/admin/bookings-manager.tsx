@@ -119,7 +119,7 @@ export function BookingsManager({
 
   // Filter Bookings
   const filteredBookings = useMemo(() => {
-    return bookings.filter((b) => {
+    const result = bookings.filter((b) => {
       const matchesSearch =
         b.booking_reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -180,8 +180,10 @@ export function BookingsManager({
       return matchesSearch && matchesStatus && matchesPayment && matchesSession && matchesDate
     })
     
+    if (!result) return []
+
     // Sort
-    return result.sort((a, b) => {
+    return [...result].sort((a: any, b: any) => {
       let aVal: any = ''
       let bVal: any = ''
 
