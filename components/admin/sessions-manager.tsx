@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Sparkles,
   PlusCircle,
@@ -38,6 +38,7 @@ interface SessionsManagerProps {
 }
 
 export function SessionsManager({ initialCategories, initialSessions }: SessionsManagerProps = {}) {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') === 'categories' ? 'categories' : 'treatments'
   const autoAction = searchParams.get('action')
@@ -218,6 +219,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
     }
 
     setIsTreatmentModalOpen(false)
+    router.refresh()
   }
 
   // Open Category Modal for Create
@@ -274,6 +276,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
     }
 
     setIsCategoryModalOpen(false)
+    router.refresh()
   }
 
   // Confirm Delete
@@ -287,6 +290,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
       await deleteSessionCategory(deletingItem.id)
     }
     setDeletingItem(null)
+    router.refresh()
   }
 
   return (
@@ -458,8 +462,9 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                   <thead>
                     <tr className="border-b border-border/70 bg-muted/30 text-foreground/60 font-semibold uppercase tracking-wider text-[11px]">
                       <th className="py-3 px-4">Treatment & Category</th>
-                      <th className="py-3 px-4 hidden md:table-cell">Description</th>
+                      <th className="py-3 px-4">Description</th>
                       <th className="py-3 px-4">Pricing & Duration</th>
+                      <th className="py-3 px-4">Capacity</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4 text-right sticky right-0 bg-muted/90 backdrop-blur-xs z-10 shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.06)]">
                         Actions
@@ -486,8 +491,8 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                         </td>
 
                         {/* Details */}
-                        <td className="py-3.5 px-4 hidden md:table-cell max-w-[200px]">
-                          <p className="text-xs text-foreground/60 truncate">
+                        <td className="py-3.5 px-4 max-w-[200px]">
+                          <p className="text-xs text-foreground/60 line-clamp-2 whitespace-normal">
                             {session.description}
                           </p>
                           <div className="flex items-center gap-1 text-[11px] text-foreground/50 mt-1 truncate">
@@ -504,6 +509,16 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                           <div className="flex items-center gap-1 text-[11px] text-foreground/50 mt-0.5">
                             <Clock className="w-3 h-3" />
                             <span>{session.duration_minutes}m (+{session.buffer_minutes}m buffer)</span>
+                          </div>
+                        </td>
+
+                        {/* Capacity */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="font-serif font-semibold text-foreground text-sm">
+                            {session.active_capacity !== undefined ? session.active_capacity : session.max_slots} Available
+                          </div>
+                          <div className="flex items-center gap-1 text-[11px] text-foreground/50 mt-0.5">
+                            <span>{session.bookings_count || 0} Booked / {session.max_slots} Total</span>
                           </div>
                         </td>
 
@@ -574,7 +589,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                 <thead>
                   <tr className="border-b border-border/70 bg-muted/30 text-foreground/60 font-semibold uppercase tracking-wider text-[11px]">
                     <th className="py-3 px-4">Category Name</th>
-                    <th className="py-3 px-4 hidden md:table-cell">Description</th>
+                    <th className="py-3 px-4">Description</th>
                     <th className="py-3 px-4">Defaults</th>
                     <th className="py-3 px-4">Capacity</th>
                     <th className="py-3 px-4">Status</th>
@@ -608,8 +623,8 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                         </td>
 
                         {/* Description */}
-                        <td className="py-3.5 px-4 hidden md:table-cell max-w-[250px]">
-                          <p className="text-xs text-foreground/60 truncate">
+                        <td className="py-3.5 px-4 max-w-[250px]">
+                          <p className="text-xs text-foreground/60 line-clamp-2 whitespace-normal">
                             {cat.description}
                           </p>
                           <div className="text-[10px] font-medium text-foreground/70 bg-muted/60 px-2 py-0.5 rounded-md border border-border/50 inline-block mt-1.5">
@@ -1271,13 +1286,37 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                   </div>
                 </div>
 
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <div className="flex items-center gap-2 text-gold mb-1.5">
-                    <Layers className="w-4 h-4" />
-                    <span className="text-sm font-semibold text-foreground">Assigned Treatments</span>
+                <div className="flex flex-col gap-3 p-4 rounded-xl bg-muted/20 border border-border/40">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-gold">
+                      <Layers className="w-4 h-4" />
+                      <span className="text-sm font-semibold text-foreground">Assigned Treatments</span>
+                    </div>
+                    <span className="text-xs font-medium text-foreground/60 bg-background px-2 py-1 rounded-md border border-border/50">
+                      {sessions.filter(s => s.session_type_id === viewingCategory.id || s.category_name === viewingCategory.name).length} Total
+                    </span>
                   </div>
-                  <div className="text-sm font-medium text-foreground">
-                    {sessions.filter(s => s.session_type_id === viewingCategory.id || s.category_name === viewingCategory.name).length} treatments
+                  <div className="flex flex-col gap-2 mt-1">
+                    {sessions.filter(s => s.session_type_id === viewingCategory.id || s.category_name === viewingCategory.name).length === 0 ? (
+                      <div className="text-xs text-foreground/50 py-2 text-center">No treatments assigned yet.</div>
+                    ) : (
+                      sessions.filter(s => s.session_type_id === viewingCategory.id || s.category_name === viewingCategory.name).map(s => (
+                        <div 
+                          key={s.id}
+                          onClick={() => {
+                            setViewingCategory(null);
+                            setViewingSession(s);
+                          }}
+                          className="px-3 py-2.5 rounded-lg bg-background border border-border/50 hover:border-gold/40 cursor-pointer flex items-center justify-between group transition-all shadow-xs hover:shadow-sm"
+                        >
+                          <div>
+                            <p className="text-xs font-semibold text-foreground group-hover:text-gold transition-colors">{s.title}</p>
+                            <p className="text-[10px] text-foreground/50 mt-0.5">£{Number(s.pricing).toFixed(2)} • {s.duration_minutes}m</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-foreground/30 group-hover:text-gold transition-colors" />
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>

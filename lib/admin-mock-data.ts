@@ -25,6 +25,8 @@ export interface MockSession {
   duration_minutes: number
   buffer_minutes: number
   max_slots: number
+  bookings_count?: number
+  active_capacity?: number
   location: string
   status: 'active' | 'draft' | 'archived'
   is_ongoing: boolean

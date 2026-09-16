@@ -38,6 +38,8 @@ export default async function SessionsPage() {
     duration_minutes: s.duration_minutes,
     buffer_minutes: s.session_types?.buffer_minutes || 15,
     max_slots: s.max_slots,
+    bookings_count: s.bookings?.[0]?.count || 0,
+    active_capacity: Math.max(0, s.max_slots - (s.bookings?.[0]?.count || 0)),
     location: s.location || 'Harley Street Clinic, Suite 4B',
     status: s.status,
     is_ongoing: s.is_ongoing,

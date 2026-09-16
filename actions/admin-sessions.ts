@@ -155,7 +155,7 @@ export async function getSessions(filters?: {
 
   let query = supabase
     .from('sessions')
-    .select('*, session_types(id, name, slug)')
+    .select('*, session_types(id, name, slug), bookings(count)')
     .order('created_at', { ascending: false })
 
   if (filters?.categoryId && filters.categoryId !== 'all') {
@@ -179,7 +179,7 @@ export async function getSessions(filters?: {
       const adminClient = createAdminClient()
       let fallbackQuery = adminClient
         .from('sessions')
-        .select('*, session_types(id, name, slug)')
+        .select('*, session_types(id, name, slug), bookings(count)')
         .order('created_at', { ascending: false })
 
       if (filters?.categoryId && filters.categoryId !== 'all') {
@@ -244,7 +244,6 @@ export async function createSession(formData: {
       pricing: formData.pricing,
       currency: formData.currency || 'GBP',
       duration_minutes: formData.duration_minutes,
-      buffer_minutes: formData.buffer_minutes || 15,
       max_slots: formData.max_slots || 4,
       location: formData.location || 'Harley Street Clinic, Suite 4B',
       status: formData.status || 'active',
@@ -295,10 +294,11 @@ export async function updateSession(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  const { buffer_minutes, ...validUpdates } = updates;
   const { data: updated, error } = await supabase
     .from('sessions')
     .update({
-      ...updates,
+      ...validUpdates,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
