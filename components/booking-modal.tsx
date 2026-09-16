@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -9,17 +9,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import { TREATMENT_CATEGORIES, getAllCategories, TREATMENTS } from '@/lib/treatments'
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react'
+import { submitBooking } from '@/actions/submit-booking'
 
 interface BookingModalProps {
   isOpen: boolean
   onClose: () => void
   selectedTreatment?: string
+  sessions?: any[]
 }
 
-export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModalProps) {
+export function BookingModal({ isOpen, onClose, selectedTreatment, sessions = [] }: BookingModalProps) {
   const [step, setStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     treatment: selectedTreatment || '',
     date: '',
@@ -30,6 +32,16 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
     phone: '',
     concerns: '',
   })
+
+  // Sync selected treatment into form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        treatment: selectedTreatment || ''
+      }))
+    }
+  }, [isOpen, selectedTreatment])
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1)
@@ -44,21 +56,28 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = () => {
-    console.log('Booking submitted:', formData)
-    alert(`Thank you! Your consultation request for ${formData.treatment} on ${formData.date} has been submitted.`)
-    setStep(1)
-    setFormData({
-      treatment: selectedTreatment || '',
-      date: '',
-      time: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      concerns: '',
-    })
-    onClose()
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      const res = await submitBooking(formData)
+      alert(`Thank you! Your consultation request has been submitted. Booking Reference: ${res.booking_reference}`)
+      setStep(1)
+      setFormData({
+        treatment: selectedTreatment || '',
+        date: '',
+        time: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        concerns: '',
+      })
+      onClose()
+    } catch (err: any) {
+      alert(err.message || 'An error occurred while booking. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleClose = () => {
@@ -97,9 +116,9 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                 >
                   <option value="">Choose a treatment...</option>
-                  {TREATMENTS.map((treatment) => (
-                    <option key={treatment.id} value={treatment.name}>
-                      {treatment.name}
+                  {sessions.map((treatment) => (
+                    <option key={treatment.id} value={treatment.title}>
+                      {treatment.title}
                     </option>
                   ))}
                 </select>
@@ -140,7 +159,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
           {step === 2 && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-foreground mb-2 block">First Name</span>
+                <span className="text-sm font-medium text-foreground mb-2 block">First Name <span className="text-red-500">*</span></span>
                 <input
                   type="text"
                   name="firstName"
@@ -152,7 +171,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-foreground mb-2 block">Last Name</span>
+                <span className="text-sm font-medium text-foreground mb-2 block">Last Name <span className="text-red-500">*</span></span>
                 <input
                   type="text"
                   name="lastName"
@@ -164,7 +183,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-foreground mb-2 block">Email</span>
+                <span className="text-sm font-medium text-foreground mb-2 block">Email <span className="text-red-500">*</span></span>
                 <input
                   type="email"
                   name="email"
@@ -234,6 +253,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
           {step < 3 && (
             <Button 
               onClick={handleNext} 
+              disabled={step === 1 ? !(formData.treatment && formData.date && formData.time) : !(formData.firstName && formData.lastName && /^[^@]+@[^@]+\.[^@]+$/.test(formData.email))}
               className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
             >
               Next
@@ -242,12 +262,17 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
           )}
 
           {step === 3 && (
-            <Button 
+            <Button
               onClick={handleSubmit}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+              disabled={!formData.concerns || isSubmitting}
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              <Check className="w-4 h-4" />
-              Confirm Booking
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
+              Complete Booking
             </Button>
           )}
         </div>

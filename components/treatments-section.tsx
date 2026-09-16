@@ -1,19 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { TREATMENT_CATEGORIES, getAllCategories, getTreatmentsByCategory } from '@/lib/treatments'
-import type { TreatmentCategory } from '@/lib/treatments'
 import { ChevronRight } from 'lucide-react'
 
 interface TreatmentsSectionProps {
   onTreatmentSelect: (treatmentName: string) => void
+  sessionTypes?: any[]
+  sessions?: any[]
 }
 
-export function TreatmentsSection({ onTreatmentSelect }: TreatmentsSectionProps) {
-  const [activeTab, setActiveTab] = useState<TreatmentCategory>('facial')
-  const treatments = getTreatmentsByCategory(activeTab)
-  const categories = getAllCategories()
+export function TreatmentsSection({ onTreatmentSelect, sessionTypes = [], sessions = [] }: TreatmentsSectionProps) {
+  const [activeTabId, setActiveTabId] = useState<string>('')
+
+  // Set initial active tab
+  useEffect(() => {
+    if (sessionTypes.length > 0 && !activeTabId) {
+      setActiveTabId(sessionTypes[0].id)
+    }
+  }, [sessionTypes, activeTabId])
+
+  const activeCategory = sessionTypes.find(c => c.id === activeTabId) || sessionTypes[0]
+  const categoryTreatments = sessions.filter(s => s.session_type_id === activeCategory?.id)
 
   return (
     <section id="treatments" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -29,32 +37,34 @@ export function TreatmentsSection({ onTreatmentSelect }: TreatmentsSectionProps)
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-3 justify-center mb-12">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setActiveTab(category)}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                activeTab === category
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-foreground hover:bg-secondary'
-              }`}
-            >
-              {TREATMENT_CATEGORIES[category]}
-            </button>
-          ))}
-        </div>
+        {sessionTypes.length > 0 && (
+          <div className="flex flex-wrap gap-3 justify-center mb-12">
+            {sessionTypes.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveTabId(category.id)}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeTabId === category.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-foreground hover:bg-secondary'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Treatment Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {treatments.map((treatment) => (
+          {categoryTreatments.map((treatment) => (
             <div
               key={treatment.id}
               className="border border-border rounded-xl p-6 hover:shadow-lg transition-shadow bg-white flex flex-col"
             >
               {/* Card Header */}
               <h3 className="text-xl font-serif font-bold text-foreground mb-3">
-                {treatment.name}
+                {treatment.title}
               </h3>
               
               {/* Description */}
@@ -63,11 +73,11 @@ export function TreatmentsSection({ onTreatmentSelect }: TreatmentsSectionProps)
               </p>
 
               {/* Benefits List */}
-              {treatment.benefits.length > 0 && (
+              {treatment.benefits && treatment.benefits.length > 0 && (
                 <div className="mb-6 pb-6 border-b border-border flex-grow">
                   <h4 className="text-sm font-semibold text-foreground mb-3">Benefits:</h4>
                   <ul className="space-y-2">
-                    {treatment.benefits.map((benefit, idx) => (
+                    {treatment.benefits.map((benefit: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
                         <ChevronRight className="w-3 h-3 text-accent flex-shrink-0 mt-0.5" />
                         <span>{benefit}</span>
@@ -79,13 +89,19 @@ export function TreatmentsSection({ onTreatmentSelect }: TreatmentsSectionProps)
 
               {/* CTA Button */}
               <Button
-                onClick={() => onTreatmentSelect(treatment.name)}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => onTreatmentSelect(treatment.title)}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-auto"
               >
                 Book Consultation
               </Button>
             </div>
           ))}
+
+          {categoryTreatments.length === 0 && (
+            <div className="col-span-full py-12 text-center text-muted-foreground">
+              No active treatments found for this category.
+            </div>
+          )}
         </div>
       </div>
     </section>

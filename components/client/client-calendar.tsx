@@ -77,7 +77,7 @@ export function ClientCalendar({ upcomingBookings }: ClientCalendarProps) {
                 <div>
                   <h4 className="font-medium text-foreground text-sm">{booking.sessions?.title || booking.session_title}</h4>
                   <div className="flex items-center gap-3 mt-1.5 text-xs text-foreground/60">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1" suppressHydrationWarning>
                       <CalendarDays className="w-3.5 h-3.5 text-gold" />
                       {new Date(booking.appointment_date).toLocaleDateString('en-GB', { 
                         weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
@@ -173,7 +173,7 @@ export function ClientCalendar({ upcomingBookings }: ClientCalendarProps) {
 
           {/* Selected Date Details */}
           <div className="w-full md:w-64 border-t md:border-t-0 md:border-l border-border/60 pt-6 md:pt-0 md:pl-6 flex flex-col">
-            <h4 className="text-xs font-semibold uppercase text-foreground/50 mb-4">
+            <h4 className="text-xs font-semibold uppercase text-foreground/50 mb-4" suppressHydrationWarning>
               {selectedDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' })}
             </h4>
             

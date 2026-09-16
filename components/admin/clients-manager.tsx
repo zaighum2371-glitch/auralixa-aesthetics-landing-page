@@ -34,24 +34,31 @@ import {
 
 interface ClientsManagerProps {
   initialClients?: MockClient[]
+  initialBookings?: any[]
   currentUserId?: string
 }
 
-export function ClientsManager({ initialClients, currentUserId }: ClientsManagerProps = {}) {
+export function ClientsManager({ initialClients, initialBookings, currentUserId }: ClientsManagerProps = {}) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const autoAction = searchParams.get('action')
 
-  const { clients: storeClients, bookings, addClient, updateClient, deleteClient } = useAdminStore()
+  const { clients: storeClients, bookings: storeBookings, addClient, updateClient, deleteClient } = useAdminStore()
   const [clients, setClients] = useState<MockClient[]>(
     initialClients && initialClients.length > 0 ? initialClients : storeClients
+  )
+  const [bookings, setBookings] = useState<any[]>(
+    initialBookings && initialBookings.length > 0 ? initialBookings : storeBookings
   )
 
   useEffect(() => {
     if (initialClients && initialClients.length > 0) {
       setClients(initialClients)
     }
-  }, [initialClients])
+    if (initialBookings && initialBookings.length > 0) {
+      setBookings(initialBookings)
+    }
+  }, [initialClients, initialBookings])
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('')
@@ -793,14 +800,14 @@ export function ClientsManager({ initialClients, currentUserId }: ClientsManager
                 </button>
               </div>
 
-              {bookings.filter((b) => b.client_id === selectedClient360.id || b.client_name.includes(selectedClient360.first_name)).length === 0 ? (
+              {bookings.filter((b) => b.client_id === selectedClient360.id || b.client_name.includes(selectedClient360.first_name) || b.client_email === selectedClient360.email).length === 0 ? (
                 <div className="text-center py-6 text-xs text-foreground/50 border border-dashed border-border/70 rounded-xl">
                   No appointments logged for this client yet.
                 </div>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                   {bookings
-                    .filter((b) => b.client_id === selectedClient360.id || b.client_name.includes(selectedClient360.first_name))
+                    .filter((b) => b.client_id === selectedClient360.id || b.client_name.includes(selectedClient360.first_name) || b.client_email === selectedClient360.email)
                     .map((bk) => (
                       <div
                         key={bk.id}
@@ -830,7 +837,7 @@ export function ClientsManager({ initialClients, currentUserId }: ClientsManager
                             </span>
                             <span
                               className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border ${
-                                bk.payment_status === 'paid_in_person' || bk.payment_status === 'paid_online'
+                                bk.payment_status === 'paid_in_person'
                                   ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
                                   : bk.payment_status === 'waived'
                                   ? 'bg-purple-500/10 text-purple-700 border-purple-500/20'

@@ -9,7 +9,12 @@ import { SocialProof } from '@/components/social-proof'
 import { FAQ } from '@/components/faq'
 import { Footer } from '@/components/footer'
 
-export function PageContent() {
+interface PageContentProps {
+  sessionTypes?: any[]
+  sessions?: any[]
+}
+
+export function PageContent({ sessionTypes = [], sessions = [] }: PageContentProps) {
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState<string | undefined>()
 
@@ -32,7 +37,11 @@ export function PageContent() {
     <>
       <Header onBookingClick={handleBookingClick} />
       <Hero onBookingClick={handleBookingClick} onExploreClick={handleExploreClick} />
-      <TreatmentsSection onTreatmentSelect={handleTreatmentSelect} />
+      <TreatmentsSection 
+        onTreatmentSelect={handleTreatmentSelect} 
+        sessionTypes={sessionTypes}
+        sessions={sessions}
+      />
       <SocialProof />
       <FAQ />
       <Footer onBookingClick={handleBookingClick} />
@@ -40,6 +49,7 @@ export function PageContent() {
         isOpen={isBookingOpen} 
         onClose={() => setIsBookingOpen(false)}
         selectedTreatment={selectedTreatment}
+        sessions={sessions}
       />
     </>
   )
