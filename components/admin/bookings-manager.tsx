@@ -371,7 +371,7 @@ export function BookingsManager({
             Appointments & Bookings Ledger
           </h1>
           <p className="text-xs text-foreground/60 mt-1">
-            Oversee Harley Street consultations, manage status transitions, and process in-person desk payments.
+            Oversee clinic consultations, manage status transitions, and process in-person desk payments.
           </p>
         </div>
 
@@ -1080,7 +1080,7 @@ export function BookingsManager({
                   type="button"
                   onClick={() => {
                     setPaymentMethod('voucher')
-                    setPaymentNote('Harley Street Clinic Gift Voucher')
+                    setPaymentNote('Clinic Gift Voucher')
                   }}
                   className={`p-3 rounded-xl border text-center transition-all ${
                     paymentMethod === 'voucher'

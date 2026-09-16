@@ -268,7 +268,7 @@ export function AdminOverview({
             Clinic Overview
           </h1>
           <p className="text-sm text-foreground/70 mt-1 max-w-2xl">
-            Central administrative console for Harley Street operations. Monitor real-time performance trends, manage schedules, and process front-desk settlements.
+            Central administrative console for clinic operations. Monitor real-time performance trends, manage schedules, and process front-desk settlements.
           </p>
         </div>
 
@@ -646,7 +646,7 @@ export function AdminOverview({
               <p className="text-xs text-foreground/60">
                 {contextFocus === 'unsettled'
                   ? 'Appointments awaiting in-person card terminal or cash settlement.'
-                  : 'Scheduled consultations and treatment appointments at Harley Street.'}
+                  : 'Scheduled consultations and treatment appointments at Castlemere Community Centre.'}
               </p>
             </div>
             <Link

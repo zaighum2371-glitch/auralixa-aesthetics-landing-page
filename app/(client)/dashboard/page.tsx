@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/sign-out-button'
-import { Sparkles, Calendar, ShieldCheck, User, ArrowRight, Clock, MapPin, AlertCircle } from 'lucide-react'
+import { Sparkles, Calendar, ShieldCheck, User, ArrowRight, Clock, MapPin, AlertCircle, History, Bell, FileText, Award } from 'lucide-react'
+import { ClientCalendar } from '@/components/client/client-calendar'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,23 @@ export default async function ClientDashboardPage() {
 
   const role = profile?.role || 'user'
   const status = profile?.status || 'active'
+
+  const { data: pastBookings } = await supabase
+    .from('bookings')
+    .select('*, sessions(title, post_care_instructions)')
+    .eq('client_id', user.id)
+    .eq('status', 'completed')
+    .order('appointment_date', { ascending: false })
+
+  const { data: upcomingBookings } = await supabase
+    .from('bookings')
+    .select('*, sessions(title, location)')
+    .eq('client_id', user.id)
+    .in('status', ['pending', 'confirmed'])
+    .order('appointment_date', { ascending: true })
+    .limit(5)
+
+  const recentBookingWithCare = pastBookings?.find((b: any) => b.sessions?.post_care_instructions)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -85,10 +103,10 @@ export default async function ClientDashboardPage() {
 
           <div className="flex items-center gap-3">
             <Link 
-              href="/#treatments" 
+              href="/book" 
               className={cn(buttonVariants(), "bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg flex items-center gap-2")}
             >
-              <span>Explore Treatments</span>
+              <span>Book Now</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -109,36 +127,115 @@ export default async function ClientDashboardPage() {
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Upcoming Appointment Mock */}
+          {/* Upcoming Appointment Calendar */}
           <div className="md:col-span-2 bg-card border border-border/80 rounded-2xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border/60 pb-4">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-gold" />
-                <h2 className="font-serif text-lg font-medium text-foreground">Upcoming Care & Appointments</h2>
+                <h2 className="font-serif text-lg font-medium text-foreground">My Upcoming Bookings</h2>
               </div>
-              <span className="text-xs text-foreground/50">0 Scheduled</span>
+              <span className="text-xs text-foreground/50">{upcomingBookings?.length || 0} Scheduled</span>
             </div>
 
-            <div className="py-10 text-center space-y-3">
-              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto text-foreground/40">
-                <Clock className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-medium text-foreground">No Upcoming Treatments</h3>
-              <p className="text-xs text-foreground/60 max-w-sm mx-auto">
-                You have no pending consultations scheduled. Browse our medical aesthetic catalog to reserve your next session.
-              </p>
-              <div className="pt-2">
-                <Link 
-                  href="/#treatments" 
-                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "border-border hover:bg-muted text-foreground")}
-                >
-                  Schedule Consultation
-                </Link>
-              </div>
+            <ClientCalendar upcomingBookings={upcomingBookings || []} />
+            
+            <div className="pt-2 border-t border-border/60 flex justify-end">
+              <Link 
+                href="/book" 
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "border-gold/30 text-gold hover:bg-gold/10")}
+              >
+                Schedule New Consultation
+              </Link>
             </div>
           </div>
 
-          {/* Profile Quick Card */}
+          {/* Past Treatment History */}
+          <div className="md:col-span-2 bg-card border border-border/80 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-border/60 pb-4">
+              <div className="flex items-center gap-2">
+                <History className="w-5 h-5 text-gold" />
+                <h2 className="font-serif text-lg font-medium text-foreground">Past Treatment History</h2>
+              </div>
+            </div>
+
+            {pastBookings && pastBookings.length > 0 ? (
+              <div className="space-y-3">
+                {pastBookings.map((booking: any) => (
+                  <div key={booking.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/20 border border-border/50 rounded-xl gap-4">
+                    <div>
+                      <h4 className="font-medium text-foreground text-sm">{booking.sessions?.title || booking.session_title}</h4>
+                      <p className="text-xs text-foreground/60 mt-1">
+                        {new Date(booking.appointment_date).toLocaleDateString('en-GB', { 
+                          weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
+                        })} at {booking.start_time.slice(0, 5)}
+                      </p>
+                    </div>
+                    <Link 
+                      href="/book"
+                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "border-gold/30 text-gold hover:bg-gold/10 whitespace-nowrap")}
+                    >
+                      Book Again
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center space-y-3">
+                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto text-foreground/40">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-medium text-foreground">No Past Treatments Found</h3>
+                <p className="text-xs text-foreground/60 max-w-sm mx-auto">
+                  Once you complete a treatment with Auralixa Aesthetics, your clinical summary and invoice will appear here.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Notifications & Alerts */}
+            <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-2 border-b border-border/60 pb-4">
+                <Bell className="w-5 h-5 text-gold" />
+                <h2 className="font-serif text-lg font-medium text-foreground">Notifications & Alerts</h2>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="p-3 bg-muted/40 rounded-xl border border-border/50 text-sm">
+                  <p className="font-semibold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-gold" />
+                    Welcome to the Portal
+                  </p>
+                  <p className="text-foreground/70 text-xs mt-1 leading-relaxed">
+                    Please ensure your medical intake forms are completed before your first consultation.
+                  </p>
+                </div>
+                {recentBookingWithCare ? (
+                  <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-sm">
+                    <p className="font-semibold text-emerald-800 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                      Post-Care: {recentBookingWithCare.sessions?.title}
+                    </p>
+                    <p className="text-emerald-900/80 text-xs mt-1 leading-relaxed">
+                      {recentBookingWithCare.sessions?.post_care_instructions}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-sm">
+                    <p className="font-semibold text-emerald-800 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                      Post-Care Reminder
+                    </p>
+                    <p className="text-emerald-900/80 text-xs mt-1 leading-relaxed">
+                      No active post-care instructions. When you complete a treatment, personalized aftercare advice from your practitioner will appear here.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Profile Quick Card */}
           <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-border/60 pb-4">
               <User className="w-5 h-5 text-gold" />
@@ -186,6 +283,43 @@ export default async function ClientDashboardPage() {
                 <span>Manage Profile Details</span>
               </Link>
             </div>
+          </div>
+        </div>
+        {/* End of Main Grid */}
+        </div>
+
+        {/* Loyalty & Intakes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          {/* Medical / Intake Forms */}
+          <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gold/10 rounded-full flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 text-gold" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Medical Intake Forms</h3>
+                <p className="text-xs text-foreground/60 mt-0.5">Update your medical history and allergies securely.</p>
+              </div>
+            </div>
+            <Link href="/profile" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "border-border hover:bg-muted shrink-0")}>
+              Review
+            </Link>
+          </div>
+
+          {/* Loyalty & Rewards */}
+          <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0">
+                <Award className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Auralixa Rewards</h3>
+                <p className="text-xs text-foreground/60 mt-0.5">Refer a friend and unlock exclusive VIP pricing.</p>
+              </div>
+            </div>
+            <button className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "border-border hover:bg-muted shrink-0")} disabled>
+              Coming Soon
+            </button>
           </div>
         </div>
       </main>

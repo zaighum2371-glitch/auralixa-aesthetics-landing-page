@@ -109,7 +109,7 @@ export function ClientsManager({ initialClients, currentUserId }: ClientsManager
       email: '',
       phone: '+44 7700 ',
       date_of_birth: '1992-05-15',
-      address_line1: '14 Harley Street',
+      address_line1: '14 Tweedale St',
       address_line2: '',
       city: 'London',
       postal_code: 'W1G 9PQ',
@@ -812,21 +812,36 @@ export function ClientsManager({ initialClients, currentUserId }: ClientsManager
                             {bk.appointment_date} &bull; Ref: {bk.booking_reference}
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end gap-1">
                           <div className="font-serif font-semibold text-foreground">
                             £{bk.total_price.toFixed(2)}
                           </div>
-                          <span
-                            className={`text-[10px] uppercase font-semibold px-2 py-0.2 rounded-full border ${
-                              bk.status === 'confirmed'
-                                ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
-                                : bk.status === 'completed'
-                                ? 'bg-blue-500/10 text-blue-700 border-blue-500/20'
-                                : 'bg-amber-500/10 text-amber-700 border-amber-500/20'
-                            }`}
-                          >
-                            {bk.status}
-                          </span>
+                          <div className="flex gap-1">
+                            <span
+                              className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border ${
+                                bk.status === 'confirmed'
+                                  ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                                  : bk.status === 'completed'
+                                  ? 'bg-blue-500/10 text-blue-700 border-blue-500/20'
+                                  : 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                              }`}
+                            >
+                              {bk.status}
+                            </span>
+                            <span
+                              className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border ${
+                                bk.payment_status === 'paid_in_person' || bk.payment_status === 'paid_online'
+                                  ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                                  : bk.payment_status === 'waived'
+                                  ? 'bg-purple-500/10 text-purple-700 border-purple-500/20'
+                                  : bk.payment_status === 'refunded_in_person'
+                                  ? 'bg-rose-500/10 text-rose-700 border-rose-500/20'
+                                  : 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                              }`}
+                            >
+                              {bk.payment_status.replace(/_/g, ' ')}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}

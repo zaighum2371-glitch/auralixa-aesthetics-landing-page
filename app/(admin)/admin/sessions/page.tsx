@@ -40,10 +40,11 @@ export default async function SessionsPage() {
     max_slots: s.max_slots,
     bookings_count: s.bookings?.[0]?.count || 0,
     active_capacity: Math.max(0, s.max_slots - (s.bookings?.[0]?.count || 0)),
-    location: s.location || 'Harley Street Clinic, Suite 4B',
+    location: s.location || 'Castlemere Community Centre, Rochdale',
     status: s.status,
     is_ongoing: s.is_ongoing,
     image_url: s.image_url || undefined,
+    post_care_instructions: s.post_care_instructions || undefined,
   }))
 
   return (

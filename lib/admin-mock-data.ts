@@ -31,6 +31,7 @@ export interface MockSession {
   status: 'active' | 'draft' | 'archived'
   is_ongoing: boolean
   image_url?: string
+  post_care_instructions?: string
 }
 
 export interface MockClient {
@@ -311,7 +312,7 @@ export const INITIAL_CLIENTS: MockClient[] = [
     phone: '+44 7700 900456',
     avatar_url: null,
     date_of_birth: '1984-11-23',
-    address_line1: '92 Harley Street',
+    address_line1: '92 Tweedale St',
     city: 'London',
     state: 'Greater London',
     postal_code: 'W1G 7HY',

@@ -227,6 +227,7 @@ export async function createSession(formData: {
   location?: string
   status?: 'active' | 'draft' | 'archived'
   is_ongoing?: boolean
+  post_care_instructions?: string
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -245,9 +246,10 @@ export async function createSession(formData: {
       currency: formData.currency || 'GBP',
       duration_minutes: formData.duration_minutes,
       max_slots: formData.max_slots || 4,
-      location: formData.location || 'Harley Street Clinic, Suite 4B',
+      location: formData.location || 'Castlemere Community Centre, Rochdale',
       status: formData.status || 'active',
       is_ongoing: formData.is_ongoing !== undefined ? formData.is_ongoing : true,
+      post_care_instructions: formData.post_care_instructions || null,
     })
     .select()
     .single()
@@ -289,6 +291,7 @@ export async function updateSession(
     location?: string
     status?: 'active' | 'draft' | 'archived'
     is_ongoing?: boolean
+    post_care_instructions?: string
   }
 ) {
   const supabase = await createClient()
