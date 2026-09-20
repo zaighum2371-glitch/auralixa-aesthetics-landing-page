@@ -82,7 +82,7 @@ export async function submitBooking(formData: {
   const ref = 'BKG-' + Math.random().toString(36).substring(2, 8).toUpperCase()
 
   // 7. Insert the booking
-  const { error: insertErr } = await supabaseAdmin
+  const { data: newBooking, error: insertErr } = await supabaseAdmin
     .from('bookings')
     .insert({
       booking_reference: ref,
@@ -96,14 +96,22 @@ export async function submitBooking(formData: {
       total_price: session.pricing || 150.0,
       client_notes: formData.concerns
     })
+    .select('id')
+    .single()
 
-  if (insertErr) {
-    throw new Error('Failed to insert booking: ' + insertErr.message)
+  if (insertErr || !newBooking) {
+    throw new Error('Failed to insert booking: ' + (insertErr?.message || 'Unknown error'))
   }
 
   revalidatePath('/admin')
   revalidatePath('/admin/bookings')
   revalidatePath('/admin/clients')
 
-  return { success: true, booking_reference: ref }
+  return { 
+    success: true, 
+    booking_reference: ref,
+    booking_id: newBooking.id,
+    price: session.pricing || 150.0,
+    treatment: formData.treatment
+  }
 }

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react'
 import { submitBooking } from '@/actions/submit-booking'
+import { createCheckoutSession } from '@/actions/stripe'
 
 interface BookingModalProps {
   isOpen: boolean
@@ -33,6 +34,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment, selectedDate,
     email: '',
     phone: '',
     concerns: '',
+    paymentType: 'deposit' as 'deposit' | 'full',
   })
 
   // Sync selected treatment, date, and time into form when modal opens
@@ -64,19 +66,17 @@ export function BookingModal({ isOpen, onClose, selectedTreatment, selectedDate,
     setIsSubmitting(true)
     try {
       const res = await submitBooking(formData)
-      alert(`Thank you! Your consultation request has been submitted. Booking Reference: ${res.booking_reference}`)
-      setStep(1)
-      setFormData({
-        treatment: selectedTreatment || '',
-        date: '',
-        time: '',
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        concerns: '',
-      })
-      onClose()
+      if (res.success && res.booking_id) {
+        // Redirect to Stripe checkout
+        const checkout = await createCheckoutSession(
+          res.booking_id,
+          formData.paymentType,
+          res.price || 0,
+          res.treatment || 'Treatment'
+        )
+        
+        window.location.href = checkout.url
+      }
     } catch (err: any) {
       alert(err.message || 'An error occurred while booking. Please try again.')
     } finally {
@@ -95,6 +95,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment, selectedDate,
       email: '',
       phone: '',
       concerns: '',
+      paymentType: 'deposit',
     })
     onClose()
   }
@@ -241,6 +242,23 @@ export function BookingModal({ isOpen, onClose, selectedTreatment, selectedDate,
                   <span className="text-sm"><strong>Contact:</strong> {formData.firstName} {formData.lastName}</span>
                 </div>
               </div>
+
+              {/* Payment Selection */}
+              <div className="space-y-3 pt-2">
+                <span className="text-sm font-medium text-foreground block">Payment Option</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className={`border rounded-lg p-3 cursor-pointer flex flex-col items-center justify-center transition-colors ${formData.paymentType === 'deposit' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                    <input type="radio" name="paymentType" value="deposit" checked={formData.paymentType === 'deposit'} onChange={handleInputChange} className="sr-only" />
+                    <span className="font-semibold text-sm">20% Deposit</span>
+                    <span className="text-xs text-muted-foreground mt-1">Pay rest in person</span>
+                  </label>
+                  <label className={`border rounded-lg p-3 cursor-pointer flex flex-col items-center justify-center transition-colors ${formData.paymentType === 'full' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                    <input type="radio" name="paymentType" value="full" checked={formData.paymentType === 'full'} onChange={handleInputChange} className="sr-only" />
+                    <span className="font-semibold text-sm">Pay in Full</span>
+                    <span className="text-xs text-muted-foreground mt-1">Secure booking now</span>
+                  </label>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -270,13 +288,13 @@ export function BookingModal({ isOpen, onClose, selectedTreatment, selectedDate,
               onClick={handleSubmit}
               disabled={!formData.concerns || isSubmitting}
               className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
+              >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Check className="w-4 h-4 mr-2" />
               )}
-              Complete Booking
+              Proceed to Payment
             </Button>
           )}
         </div>
