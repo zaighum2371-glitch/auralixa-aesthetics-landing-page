@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Calendar, Clock, Sparkles, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClientBooking } from '@/actions/client-bookings'
+import { createCheckoutSession } from '@/actions/stripe'
 
 type Step = 1 | 2 | 3
 
@@ -21,6 +22,7 @@ export function BookingWizard({ sessions }: BookingWizardProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string>('') // e.g. "10:00"
   const [clientNotes, setClientNotes] = useState<string>('')
+  const [paymentType, setPaymentType] = useState<'deposit' | 'full'>('deposit')
   
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -116,10 +118,21 @@ export function BookingWizard({ sessions }: BookingWizardProps) {
       slot_count: 1
     })
 
-    setIsSubmitting(false)
-    if (res.success) {
-      router.push(`/book/success?ref=${res.booking?.booking_reference}`)
+    if (res.success && res.booking?.id) {
+      try {
+        const checkout = await createCheckoutSession(
+          res.booking.id,
+          paymentType,
+          selectedSession.pricing,
+          selectedSession.title
+        )
+        window.location.href = checkout.url
+      } catch (err: any) {
+        setIsSubmitting(false)
+        alert(err.message || 'Error creating payment session.')
+      }
     } else {
+      setIsSubmitting(false)
       alert(res.error || 'Failed to book session. Please try again.')
     }
   }
@@ -307,6 +320,23 @@ export function BookingWizard({ sessions }: BookingWizardProps) {
                   className="w-full p-4 rounded-xl border border-border/80 bg-background text-foreground text-sm focus:ring-2 focus:ring-gold/40 focus:outline-none min-h-[100px]"
                 />
               </div>
+
+              {/* Payment Selection */}
+              <div className="space-y-3 pt-4 border-t border-border/50">
+                <span className="text-sm font-medium text-foreground block">Payment Option</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center justify-center transition-all ${paymentType === 'deposit' ? 'border-gold bg-gold/5 shadow-sm' : 'border-border/80 hover:border-gold/50 bg-background'}`}>
+                    <input type="radio" name="paymentType" value="deposit" checked={paymentType === 'deposit'} onChange={() => setPaymentType('deposit')} className="sr-only" />
+                    <span className="font-serif font-bold text-lg text-foreground">20% Deposit</span>
+                    <span className="text-xs text-foreground/60 mt-1">Pay rest in clinic</span>
+                  </label>
+                  <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center justify-center transition-all ${paymentType === 'full' ? 'border-gold bg-gold/5 shadow-sm' : 'border-border/80 hover:border-gold/50 bg-background'}`}>
+                    <input type="radio" name="paymentType" value="full" checked={paymentType === 'full'} onChange={() => setPaymentType('full')} className="sr-only" />
+                    <span className="font-serif font-bold text-lg text-foreground">Pay in Full</span>
+                    <span className="text-xs text-foreground/60 mt-1">Secure your booking</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -342,7 +372,7 @@ export function BookingWizard({ sessions }: BookingWizardProps) {
               disabled={isSubmitting}
               className="px-8 py-3 rounded-full bg-gold text-background text-sm font-bold shadow-lg hover:shadow-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {isSubmitting ? 'Confirming...' : 'Confirm Booking'} <CheckCircle2 className="w-4 h-4" />
+              {isSubmitting ? 'Processing...' : 'Proceed to Payment'} <CheckCircle2 className="w-4 h-4" />
             </button>
           )}
         </div>
