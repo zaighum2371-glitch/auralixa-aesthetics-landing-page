@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { ClientsManager } from '@/components/admin/clients-manager'
 import { getClientsWithAggregates } from '@/actions/admin-clients'
+import { getBookings } from '@/actions/admin-bookings'
 import { MockClient } from '@/lib/admin-mock-data'
 import { createClient } from '@/lib/supabase/server'
 
@@ -9,12 +10,20 @@ export const metadata = {
   description: 'Manage clinic client directory, medical intake contraindications, and appointment history.',
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function ClientsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const currentUserId = user?.id
 
-  const rawClients = await getClientsWithAggregates()
+  const [
+    rawClients,
+    rawBookings
+  ] = await Promise.all([
+    getClientsWithAggregates(),
+    getBookings()
+  ])
 
   const initialClients: MockClient[] = (rawClients || []).map((c: any) => ({
     id: c.id,
@@ -41,6 +50,30 @@ export default async function ClientsPage() {
     created_at: c.created_at || new Date().toISOString(),
   }))
 
+  const initialBookings: any[] = (rawBookings || []).map((b: any) => ({
+    id: b.id,
+    booking_reference: b.booking_reference,
+    client_id: b.client_id,
+    client_name: b.client
+      ? `${b.client.first_name || ''} ${b.client.last_name || ''}`.trim() || b.client.email
+      : 'Unknown Client',
+    client_email: b.client?.email || '',
+    client_phone: b.client?.phone || '',
+    session_id: b.session_id,
+    session_title: b.session?.title || 'Unknown Session',
+    category_name: b.session?.session_types?.name || 'General Aesthetics',
+    appointment_date: b.appointment_date,
+    start_time: b.start_time,
+    end_time: b.end_time,
+    total_price: Number(b.total_price) || 0,
+    status: b.status,
+    payment_status: b.payment_status,
+    payment_method_note: b.payment_method_note || null,
+    client_notes: b.client_notes || null,
+    admin_notes: b.admin_notes || null,
+    cancel_reason: b.cancel_reason || null,
+  }))
+
   return (
     <Suspense
       fallback={
@@ -49,7 +82,7 @@ export default async function ClientsPage() {
         </div>
       }
     >
-      <ClientsManager initialClients={initialClients} currentUserId={currentUserId} />
+      <ClientsManager initialClients={initialClients} initialBookings={initialBookings} currentUserId={currentUserId} />
     </Suspense>
   )
 }

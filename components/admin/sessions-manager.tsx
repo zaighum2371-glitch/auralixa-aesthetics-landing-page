@@ -88,10 +88,11 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
     duration_minutes: 60,
     buffer_minutes: 15,
     max_slots: 4,
-    location: 'Harley Street Clinic, Suite 4B',
+    location: 'Castlemere Community Centre, Rochdale',
     status: 'active' as 'active' | 'draft' | 'archived',
     description: '',
     benefitsInput: '',
+    post_care_instructions: '',
   })
 
   // Category Form State
@@ -131,10 +132,11 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
       duration_minutes: 60,
       buffer_minutes: 15,
       max_slots: 4,
-      location: 'Harley Street Clinic, Suite 4B',
+      location: 'Castlemere Community Centre, Rochdale',
       status: 'active',
       description: '',
       benefitsInput: 'Skin rejuvenation, Collagen synthesis, Instant radiance',
+      post_care_instructions: '',
     })
     setIsTreatmentModalOpen(true)
   }
@@ -154,6 +156,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
       status: session.status,
       description: session.description,
       benefitsInput: session.benefits.join(', '),
+      post_care_instructions: session.post_care_instructions || '',
     })
     setIsTreatmentModalOpen(true)
   }
@@ -184,6 +187,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
       is_ongoing: true,
       description: treatmentForm.description,
       benefits: benefitsArray,
+      post_care_instructions: treatmentForm.post_care_instructions,
     }
 
     if (editingSession) {
@@ -828,7 +832,7 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                   value={treatmentForm.location}
                   onChange={(e) => setTreatmentForm({ ...treatmentForm, location: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-xs"
-                  placeholder="e.g. Harley Street Clinic, Suite 4B"
+                  placeholder="e.g. Castlemere Community Centre, Rochdale"
                 />
               </div>
 
@@ -851,6 +855,17 @@ export function SessionsManager({ initialCategories, initialSessions }: Sessions
                   onChange={(e) => setTreatmentForm({ ...treatmentForm, description: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-xs"
                   placeholder="Describe patient consultation steps, indications, and aftercare recommendations..."
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-semibold text-foreground/70">Post-Care Instructions (for Client Dashboard)</label>
+                <textarea
+                  rows={3}
+                  value={treatmentForm.post_care_instructions}
+                  onChange={(e) => setTreatmentForm({ ...treatmentForm, post_care_instructions: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-xs"
+                  placeholder="Enter detailed post-care instructions that will appear on the client's dashboard after treatment..."
                 />
               </div>
 

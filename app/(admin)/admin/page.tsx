@@ -92,7 +92,7 @@ export default async function AdminDashboardPage() {
     duration_minutes: s.duration_minutes || 60,
     buffer_minutes: s.session_types?.buffer_minutes || 15,
     max_slots: s.max_slots || 1,
-    location: s.location || 'Harley Street Clinic',
+    location: s.location || 'Castlemere Community Centre, Rochdale',
     status: s.status || 'active',
     is_ongoing: Boolean(s.is_ongoing),
     image_url: s.image_url || undefined,

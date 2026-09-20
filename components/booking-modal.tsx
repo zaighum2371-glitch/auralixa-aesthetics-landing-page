@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -9,27 +9,45 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import { TREATMENT_CATEGORIES, getAllCategories, TREATMENTS } from '@/lib/treatments'
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react'
+import { submitBooking } from '@/actions/submit-booking'
+import { createCheckoutSession } from '@/actions/stripe'
 
 interface BookingModalProps {
   isOpen: boolean
   onClose: () => void
   selectedTreatment?: string
+  selectedDate?: string
+  selectedTime?: string
+  sessions?: any[]
 }
 
-export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModalProps) {
+export function BookingModal({ isOpen, onClose, selectedTreatment, selectedDate, selectedTime, sessions = [] }: BookingModalProps) {
   const [step, setStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     treatment: selectedTreatment || '',
-    date: '',
-    time: '',
+    date: selectedDate || '',
+    time: selectedTime || '',
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     concerns: '',
+    paymentType: 'deposit' as 'deposit' | 'full',
   })
+
+  // Sync selected treatment, date, and time into form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        treatment: selectedTreatment || '',
+        date: selectedDate || '',
+        time: selectedTime || '',
+      }))
+    }
+  }, [isOpen, selectedTreatment, selectedDate, selectedTime])
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1)
@@ -44,21 +62,26 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = () => {
-    console.log('Booking submitted:', formData)
-    alert(`Thank you! Your consultation request for ${formData.treatment} on ${formData.date} has been submitted.`)
-    setStep(1)
-    setFormData({
-      treatment: selectedTreatment || '',
-      date: '',
-      time: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      concerns: '',
-    })
-    onClose()
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      const res = await submitBooking(formData)
+      if (res.success && res.booking_id) {
+        // Redirect to Stripe checkout
+        const checkout = await createCheckoutSession(
+          res.booking_id,
+          formData.paymentType,
+          res.price || 0,
+          res.treatment || 'Treatment'
+        )
+        
+        window.location.href = checkout.url
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred while booking. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleClose = () => {
@@ -72,6 +95,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
       email: '',
       phone: '',
       concerns: '',
+      paymentType: 'deposit',
     })
     onClose()
   }
@@ -97,9 +121,9 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                 >
                   <option value="">Choose a treatment...</option>
-                  {TREATMENTS.map((treatment) => (
-                    <option key={treatment.id} value={treatment.name}>
-                      {treatment.name}
+                  {sessions.map((treatment) => (
+                    <option key={treatment.id} value={treatment.title}>
+                      {treatment.title}
                     </option>
                   ))}
                 </select>
@@ -140,7 +164,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
           {step === 2 && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-foreground mb-2 block">First Name</span>
+                <span className="text-sm font-medium text-foreground mb-2 block">First Name <span className="text-red-500">*</span></span>
                 <input
                   type="text"
                   name="firstName"
@@ -152,7 +176,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-foreground mb-2 block">Last Name</span>
+                <span className="text-sm font-medium text-foreground mb-2 block">Last Name <span className="text-red-500">*</span></span>
                 <input
                   type="text"
                   name="lastName"
@@ -164,7 +188,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-foreground mb-2 block">Email</span>
+                <span className="text-sm font-medium text-foreground mb-2 block">Email <span className="text-red-500">*</span></span>
                 <input
                   type="email"
                   name="email"
@@ -218,6 +242,23 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
                   <span className="text-sm"><strong>Contact:</strong> {formData.firstName} {formData.lastName}</span>
                 </div>
               </div>
+
+              {/* Payment Selection */}
+              <div className="space-y-3 pt-2">
+                <span className="text-sm font-medium text-foreground block">Payment Option</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className={`border rounded-lg p-3 cursor-pointer flex flex-col items-center justify-center transition-colors ${formData.paymentType === 'deposit' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                    <input type="radio" name="paymentType" value="deposit" checked={formData.paymentType === 'deposit'} onChange={handleInputChange} className="sr-only" />
+                    <span className="font-semibold text-sm">20% Deposit</span>
+                    <span className="text-xs text-muted-foreground mt-1">Pay rest in person</span>
+                  </label>
+                  <label className={`border rounded-lg p-3 cursor-pointer flex flex-col items-center justify-center transition-colors ${formData.paymentType === 'full' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                    <input type="radio" name="paymentType" value="full" checked={formData.paymentType === 'full'} onChange={handleInputChange} className="sr-only" />
+                    <span className="font-semibold text-sm">Pay in Full</span>
+                    <span className="text-xs text-muted-foreground mt-1">Secure booking now</span>
+                  </label>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -234,6 +275,7 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
           {step < 3 && (
             <Button 
               onClick={handleNext} 
+              disabled={step === 1 ? !(formData.treatment && formData.date && formData.time) : !(formData.firstName && formData.lastName && /^[^@]+@[^@]+\.[^@]+$/.test(formData.email))}
               className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
             >
               Next
@@ -242,12 +284,17 @@ export function BookingModal({ isOpen, onClose, selectedTreatment }: BookingModa
           )}
 
           {step === 3 && (
-            <Button 
+            <Button
               onClick={handleSubmit}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Confirm Booking
+              disabled={!formData.concerns || isSubmitting}
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
+              Proceed to Payment
             </Button>
           )}
         </div>

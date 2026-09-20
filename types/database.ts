@@ -529,6 +529,7 @@ export type Database = {
           location: string | null
           max_slots: number
           pricing: number
+          post_care_instructions: string | null
           session_type_id: string | null
           slug: string
           status: Database["public"]["Enums"]["session_status"]
@@ -551,6 +552,7 @@ export type Database = {
           location?: string | null
           max_slots?: number
           pricing?: number
+          post_care_instructions?: string | null
           session_type_id?: string | null
           slug: string
           status?: Database["public"]["Enums"]["session_status"]
@@ -573,6 +575,7 @@ export type Database = {
           location?: string | null
           max_slots?: number
           pricing?: number
+          post_care_instructions?: string | null
           session_type_id?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["session_status"]
