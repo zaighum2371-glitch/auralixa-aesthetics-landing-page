@@ -829,7 +829,7 @@ export function AdminOverview({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-semibold text-foreground truncate">{act.action}</span>
-                          <span className="text-[10px] text-foreground/40 shrink-0">
+                          <span className="text-[10px] text-foreground/40 shrink-0" suppressHydrationWarning>
                             {new Date(act.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           </span>
                         </div>

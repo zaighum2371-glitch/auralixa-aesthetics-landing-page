@@ -16,16 +16,18 @@ interface BookingModalProps {
   isOpen: boolean
   onClose: () => void
   selectedTreatment?: string
+  selectedDate?: string
+  selectedTime?: string
   sessions?: any[]
 }
 
-export function BookingModal({ isOpen, onClose, selectedTreatment, sessions = [] }: BookingModalProps) {
+export function BookingModal({ isOpen, onClose, selectedTreatment, selectedDate, selectedTime, sessions = [] }: BookingModalProps) {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     treatment: selectedTreatment || '',
-    date: '',
-    time: '',
+    date: selectedDate || '',
+    time: selectedTime || '',
     firstName: '',
     lastName: '',
     email: '',
@@ -33,15 +35,17 @@ export function BookingModal({ isOpen, onClose, selectedTreatment, sessions = []
     concerns: '',
   })
 
-  // Sync selected treatment into form when modal opens
+  // Sync selected treatment, date, and time into form when modal opens
   useEffect(() => {
     if (isOpen) {
       setFormData(prev => ({
         ...prev,
-        treatment: selectedTreatment || ''
+        treatment: selectedTreatment || '',
+        date: selectedDate || '',
+        time: selectedTime || '',
       }))
     }
-  }, [isOpen, selectedTreatment])
+  }, [isOpen, selectedTreatment, selectedDate, selectedTime])
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1)
