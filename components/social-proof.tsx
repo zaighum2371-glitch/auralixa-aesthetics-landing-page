@@ -128,46 +128,55 @@ export function SocialProof() {
         </div>
 
         {/* Before/After Gallery */}
-        <div className="pt-12 border-t border-border">
+        <div id="gallery" className="pt-12 border-t border-border">
           <h3 className="text-3xl font-serif font-bold text-foreground text-center mb-12">
             Transformation Gallery
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {[
-              { before: '/before-after/before-1.png', after: '/before-after/after-1.png', label: 'Skin Rejuvenation' },
-              { before: '/before-after/before-2.png', after: '/before-after/after-2.png', label: 'Facial Contouring' },
-              { before: '/before-after/before-3.png', after: '/before-after/after-3.png', label: 'Lip Enhancement' },
-              { before: '/before-after/before-4.png', after: '/before-after/after-4.png', label: 'Under-Eye Treatment' },
+              { type: 'pair', before: '/treatments/hydrafacial-1-before.png', after: '/treatments/hydrafacial-1-after.jpg', label: 'Hydrafacial' },
+              { type: 'pair', before: '/treatments/hydrafacial-2-before.jpg', after: '/treatments/hydrafacial-2-after.png', label: 'Hydrafacial' },
+              { type: 'pair', before: '/treatments/hydrafacial-3-before.jpg', after: '/treatments/hydrafacial-3-after.jpg', label: 'Hydrafacial' },
+              { type: 'single', image: '/treatments/korean-lash-lift.jpg', label: 'Korean Lash Lift' },
+              { type: 'single', image: '/treatments/halal-brows.jpg', label: 'Halal Brows' },
             ].map((item, idx) => (
               <div key={idx} className="space-y-4">
-                {/* Before */}
-                <div className="relative rounded-lg overflow-hidden h-64">
-                  <Image
-                    src={item.before}
-                    alt={`Before - ${item.label}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded">
-                    Before
+                {item.type === 'pair' ? (
+                  <>
+                    <div className="relative rounded-lg overflow-hidden h-64">
+                      <Image
+                        src={item.before!}
+                        alt={`Before - ${item.label}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute top-2 left-2 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded">
+                        Before
+                      </div>
+                    </div>
+                    <div className="relative rounded-lg overflow-hidden h-64">
+                      <Image
+                        src={item.after!}
+                        alt={`After - ${item.label}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute top-2 left-2 bg-accent text-black text-xs font-medium px-3 py-1 rounded">
+                        After
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden h-[33rem]">
+                    <Image
+                      src={item.image!}
+                      alt={item.label}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                </div>
-
-                {/* After */}
-                <div className="relative rounded-lg overflow-hidden h-64">
-                  <Image
-                    src={item.after}
-                    alt={`After - ${item.label}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-2 left-2 bg-accent text-black text-xs font-medium px-3 py-1 rounded">
-                    After
-                  </div>
-                </div>
-
-                {/* Label */}
+                )}
                 <p className="text-center text-sm font-medium text-foreground">{item.label}</p>
               </div>
             ))}

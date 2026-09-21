@@ -92,7 +92,7 @@ export function TreatmentsSection({ onTreatmentSelect, sessionTypes = [], sessio
                 onClick={() => onTreatmentSelect(treatment.title)}
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-auto"
               >
-                Book Consultation
+                Book Treatment
               </Button>
             </div>
           ))}

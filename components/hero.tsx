@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Check } from 'lucide-react'
+import Image from 'next/image'
 
 interface HeroProps {
   onBookingClick: () => void
@@ -60,12 +61,14 @@ export function Hero({ onBookingClick, onExploreClick }: HeroProps) {
           </div>
 
           {/* Right Visual */}
-          <div className="relative h-96 sm:h-[500px] bg-gradient-to-br from-muted to-secondary rounded-2xl flex items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-transparent"></div>
-            <div className="text-center z-10">
-              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white/10 mx-auto mb-4"></div>
-              <p className="text-white text-lg font-serif">Luxury Aesthetic Experience</p>
-            </div>
+          <div className="relative h-96 sm:h-[500px] rounded-2xl overflow-hidden shadow-xl">
+            <Image
+              src="/hero-image.png"
+              alt="Auralixa Aesthetics Clinic"
+              fill
+              className="object-cover object-[center_30%]"
+              priority
+            />
           </div>
         </div>
 

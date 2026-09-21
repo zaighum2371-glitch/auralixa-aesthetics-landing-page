@@ -59,7 +59,7 @@ export function Header({ onBookingClick }: HeaderProps) {
               onClick={onBookingClick}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              Book Consultation
+              Book Treatment
             </Button>
             <a 
               href="https://www.instagram.com/auralixa_aesthetics/" 
