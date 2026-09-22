@@ -12,9 +12,12 @@ export async function createCheckoutSession(
     throw new Error('STRIPE_SECRET_KEY is not set. Please ensure it is added to your .env or .env.local file.')
   }
   
-  if (!process.env.NEXT_PUBLIC_SITE_URL) {
-    throw new Error('NEXT_PUBLIC_SITE_URL is not set')
+  const getBaseUrl = () => {
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+    if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
+    return 'http://localhost:3000'
   }
+  const siteUrl = getBaseUrl()
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: '2025-01-27.acacia',
@@ -44,8 +47,8 @@ export async function createCheckoutSession(
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/booking-success?session_id={CHECKOUT_SESSION_ID}&booking_id=${bookingId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/`, 
+      success_url: `${siteUrl}/booking-success?session_id={CHECKOUT_SESSION_ID}&booking_id=${bookingId}`,
+      cancel_url: `${siteUrl}/`, 
       metadata: {
         booking_id: bookingId,
         payment_type: paymentType,
