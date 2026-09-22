@@ -4,6 +4,15 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+async function getAdminClient() {
+  const client = await createClient()
+  const { data: { user } } = await client.auth.getUser()
+  if (!user) return null
+  const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return null
+  return { supabase: createAdminClient(), user }
+}
+
 // Category Actions
 export async function getSessionCategories() {
   let supabase
@@ -49,7 +58,9 @@ export async function createSessionCategory(formData: {
   buffer_minutes?: number
   is_active?: boolean
 }) {
-  const supabase = await createClient()
+  const adminAuth = await getAdminClient()
+  if (!adminAuth) return { success: false, error: 'Unauthorized' }
+  const { supabase } = adminAuth
   const slug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
   const { data, error } = await supabase
@@ -86,7 +97,9 @@ export async function updateSessionCategory(
     is_active?: boolean
   }
 ) {
-  const supabase = await createClient()
+  const adminAuth = await getAdminClient()
+  if (!adminAuth) return { success: false, error: 'Unauthorized' }
+  const { supabase } = adminAuth
   const { data, error } = await supabase
     .from('session_types')
     .update({
@@ -108,7 +121,9 @@ export async function updateSessionCategory(
 }
 
 export async function deleteSessionCategory(id: string) {
-  const supabase = await createClient()
+  const adminAuth = await getAdminClient()
+  if (!adminAuth) return { success: false, error: 'Unauthorized' }
+  const { supabase } = adminAuth
 
   // Check if treatments belong to this category
   const { count } = await supabase
@@ -229,8 +244,9 @@ export async function createSession(formData: {
   is_ongoing?: boolean
   post_care_instructions?: string
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const adminAuth = await getAdminClient()
+  if (!adminAuth) return { success: false, error: 'Unauthorized' }
+  const { supabase, user } = adminAuth
 
   const slug = formData.slug || formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
@@ -294,8 +310,9 @@ export async function updateSession(
     post_care_instructions?: string
   }
 ) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const adminAuth = await getAdminClient()
+  if (!adminAuth) return { success: false, error: 'Unauthorized' }
+  const { supabase, user } = adminAuth
 
   const { buffer_minutes, ...validUpdates } = updates;
   const { data: updated, error } = await supabase
@@ -330,8 +347,9 @@ export async function updateSession(
 }
 
 export async function archiveSession(id: string, reason: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const adminAuth = await getAdminClient()
+  if (!adminAuth) return { success: false, error: 'Unauthorized' }
+  const { supabase, user } = adminAuth
 
   const { data: archived, error } = await supabase
     .from('sessions')
@@ -364,7 +382,9 @@ export async function archiveSession(id: string, reason: string) {
 }
 
 export async function deleteSession(id: string) {
-  const supabase = await createClient()
+  const adminAuth = await getAdminClient()
+  if (!adminAuth) return { success: false, error: 'Unauthorized' }
+  const { supabase } = adminAuth
 
   // Check if bookings are attached
   const { count } = await supabase

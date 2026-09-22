@@ -172,7 +172,7 @@ export function UserProfileMenu({ showName = false, className = '' }: UserProfil
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-card border border-border/90 rounded-2xl shadow-lg py-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="fixed left-1/2 -translate-x-1/2 top-[72px] sm:absolute sm:top-auto sm:left-auto sm:translate-x-0 sm:right-0 sm:mt-2 w-[calc(100vw-32px)] sm:w-72 bg-card border border-border/90 rounded-2xl shadow-lg py-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150 sm:origin-top-right">
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-border/60">
             <div className="flex items-center gap-3">

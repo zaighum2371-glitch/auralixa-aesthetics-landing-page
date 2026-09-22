@@ -94,9 +94,9 @@ export function Footer({ onBookingClick }: FooterProps) {
             © 2024 Auralixa Aesthetics. All rights reserved.
           </p>
           <div className="flex gap-6 mt-4 sm:mt-0 opacity-80">
-            <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
-            <a href="#" className="hover:opacity-100 transition-opacity">Terms of Service</a>
-            <a href="#" className="hover:opacity-100 transition-opacity">Accessibility</a>
+            <a href="/privacy" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
+            <a href="/terms" className="hover:opacity-100 transition-opacity">Terms of Service</a>
+            <a href="/accessibility" className="hover:opacity-100 transition-opacity">Accessibility</a>
           </div>
         </div>
       </div>
