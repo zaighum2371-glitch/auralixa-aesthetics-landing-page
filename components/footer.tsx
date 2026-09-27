@@ -40,8 +40,8 @@ export function Footer({ onBookingClick }: FooterProps) {
                 </a>
               </li>
               <li>
-                <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                  Blog
+                <a href="/articles" className="opacity-80 hover:opacity-100 transition-opacity">
+                  Blog & Articles
                 </a>
               </li>
             </ul>
@@ -90,9 +90,14 @@ export function Footer({ onBookingClick }: FooterProps) {
 
         {/* Bottom Section */}
         <div className="border-t border-primary-foreground/20 pt-8 flex flex-col sm:flex-row justify-between items-center text-sm">
-          <p className="opacity-80">
-            © 2024 Auralixa Aesthetics. All rights reserved.
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="opacity-80">
+              © {new Date().getFullYear()} Auralixa Aesthetics. All rights reserved.
+            </p>
+            <p className="text-xs opacity-60">
+              Last Updated: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
           <div className="flex gap-6 mt-4 sm:mt-0 opacity-80">
             <a href="/privacy" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
             <a href="/terms" className="hover:opacity-100 transition-opacity">Terms of Service</a>

@@ -7,9 +7,32 @@ const playfairDisplay = Playfair_Display({ subsets: ['latin'], weight: ['400', '
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://auralixa.com'),
   title: 'Auralixa Aesthetics | Premium Aesthetic Treatments',
   description: 'Discover luxury aesthetic treatments at Auralixa. Expert procedures in injectables, skincare, body contouring, and wellness.',
   generator: 'v0.app',
+  openGraph: {
+    title: 'Auralixa Aesthetics | Premium Aesthetic Treatments',
+    description: 'Discover luxury aesthetic treatments at Auralixa. Expert procedures in injectables, skincare, body contouring, and wellness.',
+    url: 'https://auralixa.com',
+    siteName: 'Auralixa Aesthetics',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Auralixa Aesthetics',
+      },
+    ],
+    locale: 'en_GB',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Auralixa Aesthetics | Premium Aesthetic Treatments',
+    description: 'Discover luxury aesthetic treatments at Auralixa. Expert procedures in injectables, skincare, body contouring, and wellness.',
+    images: ['/og-image.png'],
+  },
   icons: {
     icon: [
       {
@@ -39,9 +62,54 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'HealthAndBeautyBusiness',
+    name: 'Auralixa Aesthetics',
+    image: 'https://auralixa.com/og-image.png',
+    '@id': 'https://auralixa.com',
+    url: 'https://auralixa.com',
+    telephone: '07448297154',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Castlemere Community Centre, 60 Tweedale St',
+      addressLocality: 'Rochdale',
+      addressRegion: 'Greater Manchester',
+      postalCode: 'OL11 1HH',
+      addressCountry: 'GB'
+    },
+    openingHoursSpecification: [
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday'
+        ],
+        opens: '10:00',
+        closes: '18:00'
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: [
+          'Saturday',
+          'Sunday'
+        ],
+        opens: '10:00',
+        closes: '17:00'
+      }
+    ],
+  }
+
   return (
     <html lang="en" className="bg-background scroll-smooth">
       <body className={`${inter.className} antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

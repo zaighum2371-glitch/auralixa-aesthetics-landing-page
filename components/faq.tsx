@@ -54,11 +54,38 @@ const FAQ_ITEMS: FAQItem[] = [
     question: 'What if I\'m not satisfied with my results?',
     answer: 'Your satisfaction is guaranteed. If you\'re not happy with your results, we offer adjustments at no additional cost. We stand behind the quality of our work.',
   },
+  {
+    id: 'faq-9',
+    question: 'Who will be performing my treatment?',
+    answer: 'All treatments are performed by our highly trained and certified aesthetic practitioners. Our team undergoes continuous education to ensure the highest standards of safety and technique.',
+  },
+  {
+    id: 'faq-10',
+    question: 'Can I book a consultation without committing to a treatment?',
+    answer: 'Yes, absolutely. We encourage booking a consultation first so we can discuss your goals and concerns in a no-pressure environment before deciding on any procedures.',
+  }
 ]
 
 export function FAQ() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  }
+
   return (
     <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-3xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-16">
