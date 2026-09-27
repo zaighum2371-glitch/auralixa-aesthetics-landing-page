@@ -13,19 +13,22 @@ export const metadata: Metadata = {
 
 const articles = [
   {
-    title: "The Ultimate Guide to Dermal Fillers: What to Expect",
-    description: "Everything you need to know about dermal fillers, from the initial consultation to the final results and aftercare tips for a glowing look.",
+    title: "The Ultimate Guide to Skin Boosters & Polynucleotides",
+    slug: "skin-boosters-polynucleotides-guide",
+    description: "Discover how Skin Boosters and Polynucleotides can deeply hydrate, smooth fine lines, and restore a youthful glow from within.",
     date: "2024-05-12",
     author: "Auralixa Aesthetics"
   },
   {
-    title: "Anti-Wrinkle Treatments Explained: Botox vs Alternatives",
-    description: "A comprehensive breakdown of how anti-wrinkle injections work, why they are so popular, and how they compare to modern skincare alternatives.",
+    title: "Transform Your Skin: Microneedling & BioRePeel Explained",
+    slug: "microneedling-biorepeel-guide",
+    description: "Learn how combining advanced microneedling with medical-grade peels like BioRePeel can dramatically improve texture, scars, and pigmentation.",
     date: "2024-06-05",
     author: "Auralixa Aesthetics"
   },
   {
     title: "Skincare Routines to Enhance Your Clinic Treatments",
+    slug: "skincare-routines",
     description: "Maximize the longevity of your aesthetic treatments with a solid home skincare regimen. Learn which ingredients to use and which to avoid.",
     date: "2024-07-20",
     author: "Auralixa Aesthetics"
@@ -79,9 +82,9 @@ export default function ArticlesPage() {
               <p className="text-base text-muted-foreground mb-4">
                 {article.description}
               </p>
-              <button className="text-primary font-medium hover:underline">
+              <Link href={`/articles/${article.slug}`} className="text-primary font-medium hover:underline inline-block">
                 Read Full Article →
-              </button>
+              </Link>
             </article>
           ))}
         </div>
