@@ -50,6 +50,11 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
+  verification: {
+    other: {
+      'msvalidate.01': '2692BBC3308EF2D59A7004A7EE7CC7E0',
+    },
+  },
 }
 
 export const viewport: Viewport = {
