@@ -66,6 +66,8 @@ export function Hero({ onBookingClick, onExploreClick }: HeroProps) {
               src="/hero-image.png"
               alt="Auralixa Aesthetics Clinic"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              quality={100}
               className="object-cover object-[center_30%]"
               priority
             />
