@@ -21,7 +21,7 @@ export function BeforeAfterSlider() {
           {/* After Image (Background) */}
           <div className="absolute inset-0">
             <Image
-              src="/treatments/hydrafacial-1-after.jpg"
+              src="/treatments/hydrafacial-3-after.jpg"
               alt="After Treatment"
               fill
               className="object-cover"
@@ -37,7 +37,7 @@ export function BeforeAfterSlider() {
             style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
           >
             <Image
-              src="/treatments/hydrafacial-1-before.png"
+              src="/treatments/hydrafacial-3-before.jpg"
               alt="Before Treatment"
               fill
               className="object-cover"
@@ -49,7 +49,7 @@ export function BeforeAfterSlider() {
 
           {/* Slider line & handle */}
           <div 
-            className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize z-20 transition-all"
+            className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize z-20"
             style={{ left: `calc(${sliderPosition}% - 2px)` }}
           >
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.3)] border border-border group-hover:scale-110 transition-transform">
