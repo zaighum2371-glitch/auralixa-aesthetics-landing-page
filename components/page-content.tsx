@@ -8,6 +8,8 @@ import { BookingModal } from '@/components/booking-modal'
 import { SocialProof } from '@/components/social-proof'
 import { FAQ } from '@/components/faq'
 import { Footer } from '@/components/footer'
+import { BeforeAfterSlider } from '@/components/before-after-slider'
+import { FloatingCTA } from '@/components/floating-cta'
 
 interface PageContentProps {
   sessionTypes?: any[]
@@ -42,9 +44,11 @@ export function PageContent({ sessionTypes = [], sessions = [] }: PageContentPro
         sessionTypes={sessionTypes}
         sessions={sessions}
       />
+      <BeforeAfterSlider />
       <SocialProof />
       <FAQ />
       <Footer onBookingClick={handleBookingClick} />
+      <FloatingCTA onBookingClick={handleBookingClick} />
       <BookingModal 
         isOpen={isBookingOpen} 
         onClose={() => setIsBookingOpen(false)}

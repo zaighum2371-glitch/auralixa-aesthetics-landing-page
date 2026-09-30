@@ -24,8 +24,12 @@ export function TreatmentsSection({ onTreatmentSelect, sessionTypes = [], sessio
   const categoryTreatments = sessions.filter(s => s.session_type_id === activeCategory?.id)
 
   return (
-    <section id="treatments" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-      <div className="max-w-7xl mx-auto">
+    <section id="treatments" className="py-24 px-4 sm:px-6 lg:px-8 bg-zinc-50/50 relative overflow-hidden">
+      {/* Decorative blurred blobs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-accent/5 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-serif font-bold text-foreground mb-4">
@@ -60,8 +64,10 @@ export function TreatmentsSection({ onTreatmentSelect, sessionTypes = [], sessio
           {categoryTreatments.map((treatment) => (
             <div
               key={treatment.id}
-              className="border border-border rounded-xl p-6 hover:shadow-lg transition-shadow bg-white flex flex-col"
+              className="group relative border border-border/50 rounded-2xl p-6 hover:shadow-2xl hover:shadow-accent/5 transition-all duration-500 bg-white/70 backdrop-blur-md flex flex-col hover:-translate-y-1 overflow-hidden"
             >
+              {/* Subtle hover glow */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-accent/0 via-accent/0 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
               {/* Card Header */}
               <h3 className="text-xl font-serif font-bold text-foreground mb-3">
                 {treatment.title}

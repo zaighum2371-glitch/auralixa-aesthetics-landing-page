@@ -92,39 +92,42 @@ export function SocialProof() {
           </div>
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {TESTIMONIALS.map((testimonial) => (
-            <div
-              key={testimonial.id}
-              className="bg-white rounded-xl p-6 border border-border hover:shadow-lg transition-shadow"
-            >
-              {/* Rating */}
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 fill-accent text-accent"
-                  />
-                ))}
-              </div>
+        {/* Testimonials Marquee */}
+        <div className="relative flex overflow-x-hidden mb-16 pb-4 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+          <div className="animate-marquee whitespace-nowrap flex gap-6 px-4">
+            {[...TESTIMONIALS, ...TESTIMONIALS].map((testimonial, idx) => (
+              <div
+                key={`${testimonial.id}-${idx}`}
+                className="bg-white rounded-2xl p-8 border border-border/50 hover:shadow-xl transition-shadow w-[350px] sm:w-[400px] flex-shrink-0 flex flex-col whitespace-normal group"
+              >
+                {/* Rating */}
+                <div className="flex gap-1 mb-6">
+                  {Array.from({ length: testimonial.rating }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-5 h-5 fill-accent text-accent group-hover:scale-110 transition-transform"
+                      style={{ transitionDelay: `${i * 50}ms` }}
+                    />
+                  ))}
+                </div>
 
-              {/* Testimonial Content */}
-              <p className="text-foreground mb-4 italic">
-                "{testimonial.content}"
-              </p>
+                {/* Testimonial Content */}
+                <p className="text-foreground/90 mb-8 italic flex-grow text-lg leading-relaxed">
+                  "{testimonial.content}"
+                </p>
 
-              {/* Author */}
-              <div>
-                <p className="font-serif font-bold text-foreground">
-                  {testimonial.name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {testimonial.role}
-                </p>
+                {/* Author */}
+                <div className="pt-4 border-t border-border/50">
+                  <p className="font-serif font-bold text-foreground text-lg">
+                    {testimonial.name}
+                  </p>
+                  <p className="text-sm text-accent font-medium mt-1">
+                    {testimonial.role}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Before/After Gallery */}
