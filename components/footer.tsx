@@ -30,7 +30,7 @@ export function Footer({ onBookingClick }: FooterProps) {
                 </a>
               </li>
               <li>
-                <a href="#testimonials" className="opacity-80 hover:opacity-100 transition-opacity">
+                <a href="#gallery" className="opacity-80 hover:opacity-100 transition-opacity">
                   Gallery
                 </a>
               </li>
