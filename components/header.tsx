@@ -33,7 +33,11 @@ export function Header({ onBookingClick }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="hover:opacity-80 transition-opacity">
+            <Link 
+              href="/" 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="hover:opacity-80 transition-opacity"
+            >
               <h1 className="text-2xl font-serif font-bold text-foreground">Auralixa</h1>
             </Link>
           </div>
