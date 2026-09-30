@@ -17,7 +17,7 @@ const FAQ_ITEMS: FAQItem[] = [
   {
     id: 'faq-1',
     question: 'How long do the results last?',
-    answer: 'Results vary depending on the treatment. Botox typically lasts 3-4 months, dermal fillers 6-18 months, and skincare treatments require maintenance every 4-6 weeks for optimal results. We\'ll provide specific guidance after your consultation.',
+    answer: 'Results vary depending on the treatment. Skin Boosters and Polynucleotides typically last 6-9 months, Microneedling results can be long-lasting with proper care, and skincare treatments require maintenance every 4-6 weeks for optimal results. We\'ll provide specific guidance after your consultation.',
   },
   {
     id: 'faq-2',
@@ -46,8 +46,8 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     id: 'faq-7',
-    question: 'Are your products and equipment FDA-approved?',
-    answer: 'Yes, absolutely. We exclusively use FDA-approved products and state-of-the-art equipment from leading manufacturers. Safety and efficacy are our top priorities.',
+    question: 'Are your products and equipment CE marked and MHRA approved?',
+    answer: 'Yes, absolutely. We exclusively use CE marked and MHRA approved products and state-of-the-art equipment from leading manufacturers. Safety and efficacy are our top priorities in the UK.',
   },
   {
     id: 'faq-8',
