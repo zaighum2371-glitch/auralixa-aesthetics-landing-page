@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS public.clinic_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_name TEXT NOT NULL DEFAULT 'Auralixa Aesthetics',
   clinic_tagline TEXT DEFAULT 'Luxury Aesthetic Medicine & Clinical Skincare',
-  clinic_email TEXT NOT NULL DEFAULT 'concierge@auralixa.com',
+  clinic_email TEXT NOT NULL DEFAULT 'concierge@auralixaaesthetics.com',
   clinic_phone TEXT NOT NULL DEFAULT '+44 20 7946 0912',
   clinic_address TEXT NOT NULL DEFAULT '48 Mayfair Court, Berkeley Street, London W1J 8EH',
   cancellation_notice_hours INTEGER NOT NULL DEFAULT 24,
@@ -60,7 +60,7 @@ INSERT INTO public.clinic_settings (
 SELECT
   'Auralixa Aesthetics',
   'Luxury Aesthetic Medicine & Clinical Skincare',
-  'concierge@auralixa.com',
+  'concierge@auralixaaesthetics.com',
   '+44 20 7946 0912',
   '48 Mayfair Court, Berkeley Street, London W1J 8EH',
   24,

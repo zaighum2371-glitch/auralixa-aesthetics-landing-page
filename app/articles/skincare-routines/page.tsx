@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Skincare Routines to Enhance Clinic Treatments | Auralixa',
     description: 'Maximize the longevity of your aesthetic treatments with a solid home skincare regimen.',
-    url: 'https://auralixa.com/articles/skincare-routines',
+    url: 'https://auralixaaesthetics.com/articles/skincare-routines',
   }
 }
 

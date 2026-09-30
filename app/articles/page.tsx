@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Articles & Aesthetics Insights | Auralixa',
     description: 'Read the latest insights, tips, and news about aesthetic treatments, dermal fillers, and skincare from the experts at Auralixa Aesthetics.',
-    url: 'https://auralixa.com/articles',
+    url: 'https://auralixaaesthetics.com/articles',
   }
 }
 

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Microneedling & BioRePeel Explained | Auralixa',
     description: 'Learn how combining advanced microneedling with medical-grade peels like BioRePeel can dramatically improve texture, scars, and pigmentation.',
-    url: 'https://auralixa.com/articles/microneedling-biorepeel-guide',
+    url: 'https://auralixaaesthetics.com/articles/microneedling-biorepeel-guide',
   }
 }
 

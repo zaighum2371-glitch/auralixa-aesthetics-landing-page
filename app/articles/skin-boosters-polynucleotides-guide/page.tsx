@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Skin Boosters & Polynucleotides Guide | Auralixa',
     description: 'Discover how Skin Boosters and Polynucleotides can deeply hydrate, smooth fine lines, and restore a youthful glow from within.',
-    url: 'https://auralixa.com/articles/skin-boosters-polynucleotides-guide',
+    url: 'https://auralixaaesthetics.com/articles/skin-boosters-polynucleotides-guide',
   }
 }
 

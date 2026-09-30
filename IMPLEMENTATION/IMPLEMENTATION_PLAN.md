@@ -319,7 +319,7 @@ app/
   - [x] `/login` page with role-aware redirection (`user`/`client` ➔ `/dashboard`, `admin` ➔ `/admin`).
   - [x] `/signup` page with first name, last name, phone, email, and password.
   - [x] `/auth/callback` token exchange handler.
-  - [x] Provision clinic administrator account on Supabase (`admin@auralixa.com`).
+  - [x] Provision clinic administrator account on Supabase (`admin@auralixaaesthetics.com`).
 - [x] **User Profiles Page (`/profile`):**
   - [x] Dedicated profile management page accessible by all user role types (`user`, `client`, `admin`).
   - [x] View & update personal information (First Name, Last Name, Phone, Date of Birth, Avatar URL).

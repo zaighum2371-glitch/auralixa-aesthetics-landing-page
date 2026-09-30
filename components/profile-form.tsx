@@ -370,8 +370,8 @@ export function ProfileForm({ initialProfile }: { initialProfile: ProfileData })
             )}
             <p className="text-xs text-foreground/70 pt-1">
               For security or clinic booking reinstatement queries, please contact clinic administration at{' '}
-              <a href="mailto:concierge@auralixa.com" className="text-gold underline underline-offset-2">
-                concierge@auralixa.com
+              <a href="mailto:concierge@auralixaaesthetics.com" className="text-gold underline underline-offset-2">
+                concierge@auralixaaesthetics.com
               </a>.
             </p>
           </div>

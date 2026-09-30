@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/', '/profile/', '/api/', '/not-authorized', '/unauthorized'],
     },
-    sitemap: 'https://auralixa.com/sitemap.xml',
+    sitemap: 'https://auralixaaesthetics.com/sitemap.xml',
   }
 }

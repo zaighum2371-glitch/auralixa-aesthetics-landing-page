@@ -7,14 +7,14 @@ const playfairDisplay = Playfair_Display({ subsets: ['latin'], weight: ['400', '
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://auralixa.com'),
+  metadataBase: new URL('https://auralixaaesthetics.com'),
   title: 'Auralixa Aesthetics | Premium Aesthetic Treatments',
   description: 'Discover luxury aesthetic treatments at Auralixa. Expert procedures in injectables, skincare, body contouring, and wellness.',
   generator: 'v0.app',
   openGraph: {
     title: 'Auralixa Aesthetics | Premium Aesthetic Treatments',
     description: 'Discover luxury aesthetic treatments at Auralixa. Expert procedures in injectables, skincare, body contouring, and wellness.',
-    url: 'https://auralixa.com',
+    url: 'https://auralixaaesthetics.com',
     siteName: 'Auralixa Aesthetics',
     images: [
       {
@@ -71,9 +71,9 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'HealthAndBeautyBusiness',
     name: 'Auralixa Aesthetics',
-    image: 'https://auralixa.com/og-image.png',
-    '@id': 'https://auralixa.com',
-    url: 'https://auralixa.com',
+    image: 'https://auralixaaesthetics.com/og-image.png',
+    '@id': 'https://auralixaaesthetics.com',
+    url: 'https://auralixaaesthetics.com',
     telephone: '07448297154',
     address: {
       '@type': 'PostalAddress',

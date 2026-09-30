@@ -281,7 +281,7 @@ export function BookingsManager({
       client_name: selectedClient
         ? `${selectedClient.first_name} ${selectedClient.last_name}`
         : 'Registered Guest',
-      client_email: selectedClient?.email || 'guest@auralixa.com',
+      client_email: selectedClient?.email || 'guest@auralixaaesthetics.com',
       client_phone: selectedClient?.phone || '+44 7700 900000',
       session_id: selectedSession.id,
       session_title: selectedSession.title,
