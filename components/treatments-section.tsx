@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Sparkles } from 'lucide-react'
 
 interface TreatmentsSectionProps {
   onTreatmentSelect: (treatmentName: string) => void
@@ -42,20 +42,39 @@ export function TreatmentsSection({ onTreatmentSelect, sessionTypes = [], sessio
 
         {/* Tabs */}
         {sessionTypes.length > 0 && (
-          <div className="flex flex-wrap gap-3 justify-center mb-12">
-            {sessionTypes.map((category) => (
+          <div className="flex flex-wrap gap-3 justify-center items-center mb-12">
+            {/* Standard Categories */}
+            {sessionTypes.filter(c => c.name.toLowerCase() !== 'packages').map((category) => (
               <button
                 key={category.id}
                 onClick={() => setActiveTabId(category.id)}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   activeTabId === category.id
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground hover:bg-secondary'
+                    : 'bg-white/80 text-foreground hover:bg-secondary shadow-sm border border-border/50'
                 }`}
               >
                 {category.name}
               </button>
             ))}
+
+            {/* Packages Highlighted Tab */}
+            {sessionTypes.find(c => c.name.toLowerCase() === 'packages') && (
+              <>
+                <div className="h-8 w-px bg-border/80 mx-2 hidden sm:block"></div>
+                <button
+                  onClick={() => setActiveTabId(sessionTypes.find(c => c.name.toLowerCase() === 'packages')!.id)}
+                  className={`px-6 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${
+                    activeTabId === sessionTypes.find(c => c.name.toLowerCase() === 'packages')!.id
+                      ? 'bg-accent text-zinc-900 shadow-[0_0_20px_rgba(212,175,55,0.4)] scale-105'
+                      : 'bg-white/80 text-accent border-2 border-accent/40 hover:border-accent hover:shadow-[0_0_15px_rgba(212,175,55,0.2)]'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Special Packages
+                </button>
+              </>
+            )}
           </div>
         )}
 
